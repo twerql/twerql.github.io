@@ -9,113 +9,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        
-        .text-primary { color: #0f172a; }
-        .text-secondary { color: #475569; }
-        .text-accent { color: #0d9488; }
-        .bg-accent { background-color: #0d9488; }
-        .bg-accent:hover { background-color: #0f766e; }
-        .border-accent { border-color: #0d9488; }
-        
-        .card-hover {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        
-        .image-placeholder {
-            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #64748b;
-            font-size: 0.875rem;
-            position: relative;
-            overflow: hidden;
-        }
-        .image-placeholder::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 10px,
-                rgba(255,255,255,0.1) 10px,
-                rgba(255,255,255,0.1) 20px
-            );
-        }
-        .image-placeholder .placeholder-text {
-            background: rgba(255,255,255,0.9);
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-weight: 500;
-            z-index: 1;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        #map {
-            height: 600px;
-            width: 100%;
-            border-radius: 0.75rem;
-            z-index: 1;
-        }
-        
-        .detail-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(4px);
-            z-index: 50;
-            overflow-y: auto;
-        }
-        .detail-modal.active {
-            display: flex;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        
-        .animate-fade-in {
-            animation: fadeIn 0.4s ease-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .leaflet-popup-content-wrapper {
-            border-radius: 0.75rem;
-            padding: 0;
-        }
-        .leaflet-popup-content {
-            margin: 0;
-            padding: 16px;
-            width: 280px !important;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-50 text-gray-800">
 
@@ -163,8 +57,8 @@
                 Discover Tyumen's <span class="text-teal-600">Hidden Gems</span>
             </h1>
             <p class="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                From the first Russian settlement in Siberia to modern urban sanctuaries. 
-                Explore 10 handpicked spots loved by locals.
+                Explore the first Russian settlement in Siberia through 25 handpicked locations. 
+                From historic cathedrals to modern attractions, experience the best of Tyumen.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <button onclick="scrollToSection('spots')" class="bg-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-teal-700 transition flex items-center justify-center gap-2 text-lg shadow-lg shadow-teal-200">
@@ -192,11 +86,11 @@
                 <button id="tab-museum" onclick="filterSpots('museum')" class="px-5 py-2.5 rounded-full font-medium text-sm transition bg-slate-100 text-slate-600 hover:bg-slate-200">
                     Museums & Culture
                 </button>
-                <button id="tab-food" onclick="filterSpots('food')" class="px-5 py-2.5 rounded-full font-medium text-sm transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-                    Food & Drink
-                </button>
                 <button id="tab-architecture" onclick="filterSpots('architecture')" class="px-5 py-2.5 rounded-full font-medium text-sm transition bg-slate-100 text-slate-600 hover:bg-slate-200">
                     Architecture
+                </button>
+                <button id="tab-entertainment" onclick="filterSpots('entertainment')" class="px-5 py-2.5 rounded-full font-medium text-sm transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    Entertainment
                 </button>
             </div>
         </div>
@@ -243,8 +137,8 @@
                         <select class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm">
                             <option value="park">Park & Nature</option>
                             <option value="museum">Museum & Culture</option>
-                            <option value="food">Food & Drink</option>
                             <option value="architecture">Architecture</option>
+                            <option value="entertainment">Entertainment</option>
                         </select>
                     </div>
                 </div>
@@ -300,7 +194,7 @@
             </div>
         </div>
         <div class="max-w-7xl mx-auto mt-8 pt-8 border-t border-slate-800 text-center text-slate-500 text-sm">
-            <p>&copy; 2024 Hot Tourists Spots 72. All rights reserved.</p>
+            <p>&copy; 2026 Hot Tourists Spots 72. All rights reserved.</p>
         </div>
     </footer>
 
@@ -314,147 +208,357 @@
     </div>
 
     <script>
-        // 10 Real Tyumen Spots
+        // 25 Real Tyumen Spots - Complete List
         const spots = [
             {
                 id: 1,
-                name: "Tsvetnoy Boulevard",
-                category: "park",
-                type: "Park & Nature",
-                shortDesc: "The green heart of Tyumen with vibrant flower beds and historic walkways.",
-                fullDesc: "Tsvetnoy Boulevard is the central pedestrian street of Tyumen, stretching through the historic city center. Lined with benches, flower beds, and historic buildings, it's the perfect place for an evening stroll. The boulevard features numerous cafes, street musicians, and seasonal decorations.",
-                address: "Tsvetnoy Blvd, Tyumen",
-                coordinates: [57.1531, 65.5345],
-                hours: "Open 24/7",
-                howToGet: "Walk from the city center or take bus 12, 15, 27 to 'Tsentr' stop",
-                tips: "Visit at sunset when the flower beds are illuminated",
-                imageSeed: "park"
+                name: "LetoLeto Water Park",
+                category: "entertainment",
+                type: "Entertainment",
+                shortDesc: "Russia's largest indoor water park with over 70 attractions and slides.",
+                fullDesc: "LetoLeto is the largest indoor water park in Russia, featuring more than 70 water attractions and slides. This tropical paradise maintains a comfortable 30°C temperature year-round, making it perfect for escaping Siberian winters. The park includes wave pools, extreme slides, lazy rivers, children's zones, and spa areas. Built with cutting-edge technology by Polin Waterparks, it offers world-class entertainment for the whole family.",
+                address: "Shcherbakova St, 87, Tyumen",
+                coordinates: [57.1378, 65.5891],
+                hours: "Daily: 10:00 AM - 9:30 PM",
+                howToGet: "Bus 42, 56 or taxi (20 min from city center)",
+                tips: "Visit on weekdays to avoid crowds. Bring swimwear and towels.",
+                imageSeed: "letoleto"
             },
             {
                 id: 2,
-                name: "Kashiriny Brothers Park",
+                name: "Russian-Korean Friendship Park",
                 category: "park",
-                type: "Park & Nature",
-                shortDesc: "A vast park with the famous Tyumen embankment and River Walk.",
-                fullDesc: "One of the largest parks in Tyumen featuring the beautiful embankment along the Tura River. Includes sports facilities, playgrounds, observation decks, and the famous 'Bridge of Lovers'. The park hosts city celebrations and outdoor concerts.",
-                address: "Naberezhnaya St, Tyumen",
-                coordinates: [57.1492, 65.5234],
-                hours: "6:00 AM - 11:00 PM",
-                howToGet: "Bus 25, 34 to 'Naberezhnaya' or walk from city center (15 min)",
-                tips: "Rent a bike at the park entrance to explore the full 3km embankment",
-                imageSeed: "nature"
+                type: "Parks & Nature",
+                shortDesc: "Modern park celebrating 30 years of Russia-Korea diplomatic relations.",
+                fullDesc: "Opened in September 2020 near Lake Alebashevo, this is the first Russia-Korea Friendship Park in the country. The park features wild trees, tiled pathways, stylized benches, decorative lanterns, lawns, and plants that bloom at different times. It was created to commemorate the 30th anniversary of diplomatic relations between Russia and South Korea. The park includes symbolic elements from both cultures and serves as a peaceful recreation area.",
+                address: "Near Lake Alebashevo, Tyumen",
+                coordinates: [57.1167, 65.6234],
+                hours: "Open 24/7",
+                howToGet: "Bus 85, 92 to Alebashevo area (25 min from center)",
+                tips: "Great for photography, especially during cherry blossom season",
+                imageSeed: "korean-park"
             },
             {
                 id: 3,
-                name: "Tyumen Regional Museum",
-                category: "museum",
-                type: "Museum & Culture",
-                shortDesc: "Learn about Siberian history from ancient times to modern oil capital.",
-                fullDesc: "Housed in a beautiful historic building from 1910, this museum showcases the rich history of the Tyumen region. Exhibits include indigenous culture, the development of the Trans-Siberian Railway, and Tyumen's transformation into Russia's oil capital.",
-                address: "Respubliki St 73, Tyumen",
-                coordinates: [57.1539, 65.5358],
-                hours: "Tue-Sun: 10:00 AM - 6:00 PM",
-                howToGet: "Bus 15, 22 to 'Muzey' stop",
-                tips: "Ask for the English audio guide at the entrance",
-                imageSeed: "museum"
+                name: "Tsvetnoy Boulevard",
+                category: "park",
+                type: "Parks & Nature",
+                shortDesc: "The main pedestrian entertainment zone in the heart of Tyumen.",
+                fullDesc: "Tsvetnoy Boulevard is Tyumen's central pedestrian street and one of the city's modern symbols. Opened in 2004, this 800-meter-long entertainment zone stretches between Lenin, Pervomayskaya, Ordzhonikidze, and Gertsena streets. The boulevard features an amusement park, the Tyumen Circus, numerous cafes, street musicians, flower beds, and seasonal decorations. It hosts concerts, folk festivals, and city celebrations throughout the year.",
+                address: "Tsvetnoy Blvd, Tyumen",
+                coordinates: [57.1531, 65.5345],
+                hours: "Open 24/7",
+                howToGet: "Central location, accessible by all city transport",
+                tips: "Visit at sunset when the flower beds are illuminated",
+                imageSeed: "tsvetnoy"
             },
             {
                 id: 4,
-                name: "Kolokolnya (Bell Tower)",
-                category: "architecture",
-                type: "Architecture",
-                shortDesc: "The iconic symbol of Tyumen offering panoramic city views.",
-                fullDesc: "Standing at 55 meters, this historic bell tower is the tallest structure in old Tyumen. Built in the 19th century, it offers 360-degree views of the city from the observation deck. The red-brick tower is beautifully illuminated at night.",
-                address: "Semakova St 14, Tyumen",
-                coordinates: [57.1528, 65.5372],
-                hours: "Daily: 10:00 AM - 8:00 PM",
-                howToGet: "5-minute walk from Tsvetnoy Boulevard",
-                tips: "Climb to the top just before sunset for the best photos",
-                imageSeed: "architecture"
+                name: "Tyumen State Circus",
+                category: "entertainment",
+                type: "Entertainment",
+                shortDesc: "Modern circus building with original architecture, a city landmark since 2004.",
+                fullDesc: "The Tyumen State Circus, located at the northern corner of Tsvetnoy Boulevard, features distinctive modern architecture that has become a city landmark. Built in 2004, the circus hosts world-class performances including acrobatics, animal shows, and theatrical productions. The building is beautifully illuminated at night and serves as one of Tyumen's most recognizable structures. It's part of the Russian State Circus company.",
+                address: "Pervomayskaya St, 15, Tyumen",
+                coordinates: [57.1539, 65.5352],
+                hours: "Box office: Mon-Sun 10:00 AM - 7:00 PM",
+                howToGet: "Located on Tsvetnoy Boulevard, walk from city center",
+                tips: "Book tickets in advance for weekend shows",
+                imageSeed: "circus"
             },
             {
                 id: 5,
+                name: "Zatyumensky Ecopark",
+                category: "park",
+                type: "Parks & Nature",
+                shortDesc: "77-hectare protected natural area with ski slopes and sports facilities.",
+                fullDesc: "Zatyumensky Ecopark is a specially protected natural area and natural monument of regional significance, covering 77 hectares. This large eco-park offers year-round activities including cross-country ski slopes in winter and running/cycling trails in summer. The park features outdoor exercise equipment, children's playgrounds, barbecue areas, and the scenic Tin Pond. Designed with ecological sustainability principles using natural materials, it serves as a green lung for the city.",
+                address: "Barnaulskaya St, Tyumen",
+                coordinates: [57.1789, 65.5123],
+                hours: "Open 24/7",
+                howToGet: "Bus 15, 27 to 'Zatyumensky' stop (15 min from center)",
+                tips: "Rent ski equipment in winter at the park entrance",
+                imageSeed: "zatymensky"
+            },
+            {
+                id: 6,
+                name: "Bridge of Lovers",
+                category: "architecture",
+                type: "Architecture",
+                shortDesc: "Iconic cable-stayed pedestrian bridge over the Tura River.",
+                fullDesc: "The Bridge of Lovers (Most Vlyublennykh) is Tyumen's most romantic landmark. Built in 1987, this cable-stayed pedestrian bridge spans the Tura River with distinctive white pylons and steel cables. It connects the historical center with the Zarechny district and offers stunning views of the river and city. The bridge is beautifully illuminated at night and features love locks and romantic inscriptions. It's a traditional spot for newlyweds and couples.",
+                address: "Tura River, connecting Historical Center and Zarechny District",
+                coordinates: [57.1456, 65.5289],
+                hours: "Open 24/7",
+                howToGet: "Walk from Tsvetnoy Boulevard (10 min)",
+                tips: "Visit at sunset for the best photos and romantic atmosphere",
+                imageSeed: "lovers-bridge"
+            },
+            {
+                id: 7,
+                name: "Slovtsov Museum Complex",
+                category: "museum",
+                type: "Museums & Culture",
+                shortDesc: "Tyumen's largest museum with exhibitions on local history, art, and culture.",
+                fullDesc: "The I.Ya. Slovtsov Museum Complex traces its history back to 1879 and is one of the largest museums in the Tyumen region. The modern complex houses diverse exhibitions including local history, indigenous peoples of the North, archaeological finds, cultural artifacts, and the largest mammoth skeleton in Russia. The museum also features exhibitions dedicated to writer Pyotr Ershov, Rubens and his time, and the 'Cultural Layer' permanent exhibition showcasing Tyumen's rich heritage.",
+                address: "Respubliki St, 21, Tyumen",
+                coordinates: [57.1539, 65.5358],
+                hours: "Tue-Sun: 10:00 AM - 6:00 PM, Mon: Closed",
+                howToGet: "Bus 15, 22 to 'Muzey' stop",
+                tips: "Ask for the English audio guide at the entrance",
+                imageSeed: "slovtsov"
+            },
+            {
+                id: 8,
                 name: "Znamensky Cathedral",
                 category: "architecture",
                 type: "Architecture",
-                shortDesc: "Stunning 18th-century Siberian Baroque architecture with intricate icons.",
-                fullDesc: "One of the finest examples of Siberian Baroque architecture. The cathedral features elaborate frescoes, a gilded iconostasis, and underground chapels. It's an active place of worship and a masterpiece of religious art.",
-                address: "Luzanskaya St 9, Tyumen",
+                shortDesc: "18th-century Siberian Baroque masterpiece and cathedral of the Sign.",
+                fullDesc: "Znamensky Cathedral is one of the finest examples of Siberian Baroque architecture from the Tobolsk temple school. The original wooden church dates back to the 18th century, with its current appearance achieved after restoration in the 1990s. The cathedral features elaborate frescoes, a gilded iconostasis, and underground chapels. It's an active place of worship and a masterpiece of religious art, considered the pride of Tyumen architecture.",
+                address: "Semakova St, 13, Tyumen",
                 coordinates: [57.1498, 65.5412],
                 hours: "Daily: 7:00 AM - 7:00 PM",
                 howToGet: "Walk from city center or bus 10, 14 to 'Sobor'",
                 tips: "Dress modestly - cover shoulders and knees",
-                imageSeed: "vintage"
-            },
-            {
-                id: 6,
-                name: "Dzerzhinsky Square",
-                category: "architecture",
-                type: "Architecture",
-                shortDesc: "Historic square surrounded by merchant mansions and modern art.",
-                fullDesc: "The main square of Tyumen featuring the Regional Administration building, historic trading rows, and modern sculptures. Recently renovated with fountains and pedestrian zones. Hosts city festivals and New Year celebrations.",
-                address: "Dzerzhinskogo Square, Tyumen",
-                coordinates: [57.1562, 65.5341],
-                hours: "Open 24/7",
-                howToGet: "Central location, accessible by all city transport",
-                tips: "Check out the underground shopping gallery beneath the square",
-                imageSeed: "cityscape"
-            },
-            {
-                id: 7,
-                name: "SibPlant (Siberian Plant)",
-                category: "food",
-                type: "Food & Drink",
-                shortDesc: "Trendy food court in a converted industrial plant building.",
-                fullDesc: "A hipster paradise housed in a renovated Soviet-era factory. Features multiple food vendors serving everything from authentic Russian dumplings to Korean BBQ and craft burgers. The industrial interior with exposed brick and steel beams creates a unique atmosphere.",
-                address: "Sovetskaya St 47/1, Tyumen",
-                coordinates: [57.1456, 65.5289],
-                hours: "Daily: 11:00 AM - 11:00 PM",
-                howToGet: "Bus 8, 19, 35 to 'Sovetskaya' stop",
-                tips: "Try the local craft beer selection at the bar",
-                imageSeed: "food"
-            },
-            {
-                id: 8,
-                name: "Gilevskaya Roshcha",
-                category: "park",
-                type: "Park & Nature",
-                shortDesc: "Ancient pine forest with walking trails and winter ski slopes.",
-                fullDesc: "A protected natural area on the outskirts of Tyumen featuring century-old pine trees. Popular for jogging, Nordic walking, and cross-country skiing in winter. The forest has marked trails and outdoor exercise equipment.",
-                address: "Gileva St, Tyumen",
-                coordinates: [57.1167, 65.6123],
-                hours: "Open 24/7",
-                howToGet: "Bus 85, 92 to 'Gileva' terminal stop (30 min from center)",
-                tips: "Bring mosquito repellent in summer months",
-                imageSeed: "nature"
+                imageSeed: "znamensky"
             },
             {
                 id: 9,
-                name: "Art-Gallery 'Prolog'",
-                category: "museum",
-                type: "Museum & Culture",
-                shortDesc: "Contemporary art space featuring Siberian and international artists.",
-                fullDesc: "A modern art gallery in a converted loft space showcasing contemporary painting, photography, and installations. Regularly hosts exhibitions, art lectures, and creative workshops. The gallery shop sells unique local art pieces.",
-                address: "Lenina St 43, Tyumen",
-                coordinates: [57.1512, 65.5301],
-                hours: "Wed-Sun: 12:00 PM - 8:00 PM",
-                howToGet: "Walk from Tsvetnoy Boulevard (10 min)",
-                tips: "Check their schedule for opening nights with free wine",
-                imageSeed: "art"
+                name: "Holy Trinity Monastery",
+                category: "architecture",
+                type: "Architecture",
+                shortDesc: "One of Siberia's oldest monasteries founded in 1616 with Baroque architecture.",
+                fullDesc: "Holy Trinity Monastery (originally Spaso-Preobrazhensky until 1715) is one of the oldest architectural ensembles in Siberia, founded in 1616 on the high right bank of the Tura River. The monastery's centerpiece is the Trinity Cathedral, built between 1709-1715, showcasing Ukrainian Baroque elements. The complex includes the Peter and Paul Church (founded 1726), inspired by Kiev Pechersk Lavra. The monastery was destroyed during Soviet times and rebuilt in 2008.",
+                address: "Komsomolskaya St, Tyumen",
+                coordinates: [57.1567, 65.5423],
+                hours: "Daily: 7:00 AM - 8:00 PM",
+                howToGet: "Bus 12, 18 to 'Monastyr' stop",
+                tips: "Attend Sunday morning service for a spiritual experience",
+                imageSeed: "trinity"
             },
             {
                 id: 10,
-                name: "Akvamarine Water Park",
+                name: "Tura River Embankment",
+                category: "park",
+                type: "Parks & Nature",
+                shortDesc: "Scenic riverside walkway with sculptures, cafes, and panoramic views.",
+                fullDesc: "The Tura River Embankment is Tyumen's most popular tourist destination and a beautifully developed riverside promenade in the historical and cultural center. The embankment features superb sculptures, a magical walkway along the river, observation decks, fountains, cafes, and restaurants. It's a perfect place for walking, jogging, or simply enjoying views of the Tura River. The embankment is especially beautiful when illuminated at night and hosts various city events.",
+                address: "Naberezhnaya St, Tyumen",
+                coordinates: [57.1492, 65.5234],
+                hours: "Open 24/7",
+                howToGet: "Central location, walk from Tsvetnoy Boulevard (5 min)",
+                tips: "Take a boat tour in summer for river views of the city",
+                imageSeed: "embankment"
+            },
+            {
+                id: 11,
+                name: "Siberian Cats Square",
+                category: "architecture",
+                type: "Architecture",
+                shortDesc: "Unique sculpture complex honoring cats that saved Hermitage from rats in 1944.",
+                fullDesc: "Siberian Cats Square (Skver Sibirskikh Koshek) got its name in 2008 and commemorates a heroic story from 1944. During the Leningrad blockade, Tyumen sent 238 Siberian cats to Saint Petersburg to protect the famous Hermitage Museum from rats. The unique sculpture complex features 12 playful bronze cats in various poses. This charming square in the city center has become a beloved landmark and photo spot for tourists and locals.",
+                address: "Near Lenina St, Tyumen",
+                coordinates: [57.1523, 65.5312],
+                hours: "Open 24/7",
+                howToGet: "5-minute walk from Tsvetnoy Boulevard",
+                tips: "Great photo opportunity, especially with children",
+                imageSeed: "cats"
+            },
+            {
+                id: 12,
+                name: "Kolokolnikov Estate Museum",
+                category: "museum",
+                type: "Museums & Culture",
+                shortDesc: "The only preserved classical merchant estate in Tyumen from 1804.",
+                fullDesc: "The Kolokolnikov Estate is the only fully preserved classical merchant estate in Tyumen, built in 1804. Originally belonging to merchant Ivan Kolokolnikov, this unique building features elements of Baroque and neoclassicism. The museum showcases the life of 19th-century Russian merchants with period furniture, personal belongings, and exhibits about the estate's owners and notable visitors. The building's unique façade stands out against modern buildings in the historical center.",
+                address: "Lunacharskogo St, 10, Tyumen",
+                coordinates: [57.1512, 65.5301],
+                hours: "Wed-Sun: 11:00 AM - 6:00 PM",
+                howToGet: "Walk from Tsvetnoy Boulevard (10 min)",
+                tips: "Check their schedule for special exhibitions and events",
+                imageSeed: "kolokolnikov"
+            },
+            {
+                id: 13,
+                name: "Masharov House Museum",
+                category: "museum",
+                type: "Museums & Culture",
+                shortDesc: "Neoclassical mansion of industrialist N.D. Masharov showcasing pre-revolutionary life.",
+                fullDesc: "Masharov House Museum is housed in a beautiful neoclassical mansion from the early 20th century that belonged to N.D. Masharov, an industrialist and founder of the iron foundry industry in Tyumen. The museum features a small but informative exhibition dedicated to pre-revolutionary Tyumen life, with period interiors, historical photographs, and artifacts. It's a fine example of wooden architecture and offers insight into the merchant class lifestyle before 1917.",
+                address: "Lenina St, 24, Tyumen",
+                coordinates: [57.1578, 65.5270],
+                hours: "Tue-Sat: 10:00 AM - 5:00 PM",
+                howToGet: "Central location, 8-minute walk from Tsvetnoy Boulevard",
+                tips: "Interactive exhibits make history engaging for all ages",
+                imageSeed: "masharov"
+            },
+            {
+                id: 14,
+                name: "Tyumen Regional Museum of Fine Arts",
+                category: "museum",
+                type: "Museums & Culture",
+                shortDesc: "Art museum founded in 1957 with Russian and Western European collections.",
+                fullDesc: "The Tyumen Regional Museum of Fine Arts was founded in 1957 and houses a versatile collection encompassing classical Russian and Western European art, as well as works by local painters from the 19th-20th centuries. The museum features paintings, graphics, sculptures, and decorative arts. Regular exhibitions showcase both historical masterpieces and contemporary works. The collection includes pieces from various art movements and provides a comprehensive view of art history.",
+                address: "Ordzhonikidze St, 47, Tyumen",
+                coordinates: [57.1512, 65.5345],
+                hours: "Tue-Sun: 11:00 AM - 7:00 PM, Mon: Closed",
+                howToGet: "Bus 15, 27 to 'Khudozhestvenny Muzey'",
+                tips: "Free admission on the first Thursday of each month",
+                imageSeed: "fine-arts"
+            },
+            {
+                id: 15,
+                name: "Gilevskaya Roshcha",
+                category: "park",
+                type: "Parks & Nature",
+                shortDesc: "Beautiful natural forest park with trails, playgrounds, and BBQ areas.",
+                fullDesc: "Gilevskaya Roshcha (Gilev Grove) is one of Tyumen's most prominent parks, providing tranquility and comfort year-round. This beautiful natural forest park features spacious woods, marked paths and cycle ways, BBQ pits, riverbanks, and children's play areas. It's perfect for walking among century-old trees in fresh air, jogging, or family picnics. The park maintains its natural forest character while offering modern recreational facilities and sports fields.",
+                address: "Gilevskaya Roshcha St, Tyumen",
+                coordinates: [57.1249, 65.6218],
+                hours: "Open 24/7",
+                howToGet: "Bus 85, 92 to 'Gileva' terminal (25 min from center)",
+                tips: "Bring mosquito repellent in summer; perfect for autumn walks",
+                imageSeed: "gilevskaya"
+            },
+            {
+                id: 16,
+                name: "Tyumen Drama Theater",
                 category: "entertainment",
                 type: "Entertainment",
-                shortDesc: "Tropical paradise with pools, slides, and spa in Siberia's climate.",
-                fullDesc: "An indoor tropical water park maintaining 30°C year-round. Features wave pools, water slides, lazy river, and spa zones. Popular with families and those seeking tropical warmth during the harsh Siberian winter.",
-                address: "Shirotnaya St 171, Tyumen",
-                coordinates: [57.1378, 65.5891],
-                hours: "Daily: 10:00 AM - 10:00 PM",
-                howToGet: "Bus 42, 56 or taxi (20 min from center)",
-                tips: "Visit on weekdays to avoid crowds",
-                imageSeed: "water"
+                shortDesc: "Russia's largest drama theater founded in 1858 with grand performances.",
+                fullDesc: "Tyumen Drama Theater, founded in 1858, is the largest drama theater in Russia. The modern building showcases stunning architecture and hosts spectacular theatrical performances ranging from classical plays to contemporary productions. With a 158-year history, the theater is the most prominent cultural institution in Tyumen, offering a rich tapestry of performances. The theater features both traditional Russian classics and modern avant-garde productions.",
+                address: "Respubliki St, Tyumen",
+                coordinates: [57.1534, 65.5367],
+                hours: "Box office: Mon-Sat 10:00 AM - 7:00 PM",
+                howToGet: "Central location, walk from Tsvetnoy Boulevard",
+                tips: "Book tickets online in advance for popular shows",
+                imageSeed: "drama-theater"
+            },
+            {
+                id: 17,
+                name: "Historical Park 'Russia - My History'",
+                category: "museum",
+                type: "Museums & Culture",
+                shortDesc: "Ultra-modern multimedia exhibition complex covering Russian history.",
+                fullDesc: "Historical Park 'Russia - My History' is an ultra-modern multimedia exhibition complex covering over 6,900 m² across four floors. The park presents four major expositions: 'Rurikovichi', 'Romanovs', 'From Great Upheavals to Great Victory', and 'Modern History of Russia'. Using cutting-edge technology, interactive displays, 3D reconstructions, and multimedia presentations, the park brings Russian history to life in an engaging and educational way. It's a must-visit for history enthusiasts.",
+                address: "Respubliki St, Tyumen",
+                coordinates: [57.1589, 65.5401],
+                hours: "Wed-Sun: 10:00 AM - 8:00 PM, Mon-Tue: Closed",
+                howToGet: "Bus 12, 15, 27 to 'Istorichesky Park'",
+                tips: "Allow 3-4 hours to explore all four floors thoroughly",
+                imageSeed: "russia-history"
+            },
+            {
+                id: 18,
+                name: "Central Square",
+                category: "architecture",
+                type: "Architecture",
+                shortDesc: "Main city square featuring administrative buildings and Lenin monument.",
+                fullDesc: "Central Square (Tsentralnaya Ploshchad) is Tyumen's main square featuring beautiful administrative buildings and one of the region's most imposing monuments - the Monument to V.I. Lenin, installed in 1979. The square serves as the venue for major city events, celebrations, and public gatherings. Surrounded by government buildings and modern architecture, it represents the administrative heart of Tyumen. The square is beautifully maintained and illuminated at night.",
+                address: "Central Square, Tyumen",
+                coordinates: [57.1562, 65.5341],
+                hours: "Open 24/7",
+                howToGet: "Central location, accessible by all city transport",
+                tips: "Visit during city festivals for special events and concerts",
+                imageSeed: "central-square"
+            },
+            {
+                id: 19,
+                name: "Tyumen Philharmonic",
+                category: "entertainment",
+                type: "Entertainment",
+                shortDesc: "Concert hall founded in 1958 hosting classical and contemporary performances.",
+                fullDesc: "Tyumen Philharmonic was founded on October 30, 1958, with its concert hall opening in 1967. The venue hosts the acclaimed Tyumen Philharmonic Orchestra, one of Siberia's youngest yet most prestigious ensembles. The philharmonic offers diverse performances including classical concerts, symphony orchestras, chamber music, jazz, and contemporary shows. The building features excellent acoustics and hosts both local and international artists throughout the season.",
+                address: "Respubliki St, Tyumen",
+                coordinates: [57.1545, 65.5378],
+                hours: "Box office: Mon-Fri 10:00 AM - 6:00 PM",
+                howToGet: "Walk from Tsvetnoy Boulevard (7 min)",
+                tips: "Check the schedule for special guest performances",
+                imageSeed: "philharmonic"
+            },
+            {
+                id: 20,
+                name: "Tyumen Railway Station",
+                category: "architecture",
+                type: "Architecture",
+                shortDesc: "Historic Trans-Siberian Railway station built in 1885, gateway to Siberia.",
+                fullDesc: "Tyumen Railway Station, built in 1885 as part of the Yekaterinburg-Tyumen railway line, marks a pivotal moment in Siberian development. As an important stop along the Trans-Siberian Railway, the station played a crucial role in connecting European Russia with Siberia. The station complex features unique industrial architecture from the late 19th century, including preserved water towers. Today's modern station maintains its historical significance while offering comfortable facilities for travelers.",
+                address: "Privokzalnaya St, 22, Tyumen",
+                coordinates: [57.1423, 65.5156],
+                hours: "Open 24/7",
+                howToGet: "Central location, bus 5, 10, 15 to 'Vokzal'",
+                tips: "See the historic water towers - examples of industrial heritage",
+                imageSeed: "railway"
+            },
+            {
+                id: 21,
+                name: "Tyumen Hot Springs",
+                category: "entertainment",
+                type: "Entertainment",
+                shortDesc: "Natural thermal springs with temperatures from 36°C to 48°C.",
+                fullDesc: "Tyumen is famous for its 21 thermal springs, making it a year-round wellness destination. These hyperthermal springs feature water temperatures ranging from 36°C to 48°C, rising from boreholes nearly 2,500 meters deep. Popular complexes include Sovetsky Spring, Avan, Sosnoviy Bor, and Thermal Park Feshenel. Each offers outdoor pools, saunas, spa treatments, and relaxation areas. The mineral-rich waters provide therapeutic benefits and a unique Siberian spa experience.",
+                address: "Various locations around Tyumen",
+                coordinates: [57.1123, 65.4987],
+                hours: "Most open daily: 9:00 AM - 10:00 PM",
+                howToGet: "Taxi or car recommended (15-30 min from city)",
+                tips: "Visit Sovetsky Spring for the hottest water (up to 48°C)",
+                imageSeed: "hot-springs"
+            },
+            {
+                id: 22,
+                name: "Ilinsky Women's Monastery",
+                category: "architecture",
+                type: "Architecture",
+                shortDesc: "Historic monastery founded in 1620, Tyumen's only active church during Soviet times.",
+                fullDesc: "Ilinsky Women's Monastery was founded in 1620 and holds special significance as Tyumen's only active church throughout much of the Soviet period. The monastery features the Church of Elijah the Prophet and the Cathedral of the Nativity of the Blessed Virgin, with the foundation stone laid in 1833. The complex showcases traditional Russian Orthodox architecture and remains an active spiritual center. It's a peaceful place of worship with beautiful frescoes and iconostasis.",
+                address: "Kirova St, Tyumen",
+                coordinates: [57.1489, 65.5267],
+                hours: "Daily: 7:00 AM - 7:00 PM",
+                howToGet: "Bus 8, 14 to 'Ilyinsky Monastyr'",
+                tips: "Attend evening vespers for a serene spiritual experience",
+                imageSeed: "ilinsky"
+            },
+            {
+                id: 23,
+                name: "City Duma Museum",
+                category: "museum",
+                type: "Museums & Culture",
+                shortDesc: "Local history museum in historic building with natural history exhibits.",
+                fullDesc: "The City Duma Museum (Gorodskaya Duma) is a local history museum housed in a historic building in central Tyumen. The museum features exhibits on Tyumen's history from its founding in 1586 to modern times, including archaeological finds, historical photographs, documents, and artifacts. The 'Window to Nature' exhibition showcases effigies of Siberian animals and natural history displays. The museum provides comprehensive insights into the region's cultural and natural heritage.",
+                address: "Lenina St, Tyumen",
+                coordinates: [57.1534, 65.5334],
+                hours: "Tue-Sun: 10:00 AM - 6:00 PM, Mon: Closed",
+                howToGet: "Central location, 5-minute walk from Tsvetnoy Boulevard",
+                tips: "English translations available for most exhibits",
+                imageSeed: "city-duma"
+            },
+            {
+                id: 24,
+                name: "Geology, Oil and Gas Museum",
+                category: "museum",
+                type: "Museums & Culture",
+                shortDesc: "Museum showcasing Tyumen's oil and gas industry heritage and geology.",
+                fullDesc: "The Museum of Geology, Oil and Gas highlights Tyumen's role as Russia's oil and gas capital. The museum features extensive exhibits on the geological formation of Western Siberia, the history of oil and gas exploration, and the development of the industry that transformed the region. Displays include rock samples, drilling equipment, interactive materials on mining processes, and the story of Tyumen's transformation into an energy powerhouse. Essential for understanding modern Tyumen.",
+                address: "Respubliki St, Tyumen",
+                coordinates: [57.1556, 65.5389],
+                hours: "Mon-Fri: 9:00 AM - 5:00 PM, Sat-Sun: Closed",
+                howToGet: "Bus 15, 22 to 'Geologichesky Muzey'",
+                tips: "Guided tours available in English with advance booking",
+                imageSeed: "geology"
+            },
+            {
+                id: 25,
+                name: "Tyumen State University Botanical Garden",
+                category: "park",
+                type: "Parks & Nature",
+                shortDesc: "University botanical garden with diverse plant collections and research facilities.",
+                fullDesc: "Tyumen State University Botanical Garden serves as both a research facility and educational resource for the region. The garden features diverse plant collections adapted to Siberian climate conditions, including rare and endangered species. It's part of the X-BIO Institute and supports biological research and education. The garden offers peaceful walking paths, educational exhibits about local flora, and serves as a green oasis in the city. It's particularly beautiful during spring blooms and autumn colors.",
+                address: "Volodarskogo St, Tyumen",
+                coordinates: [57.1601, 65.5412],
+                hours: "Mon-Fri: 9:00 AM - 5:00 PM",
+                howToGet: "Bus 12, 18 to 'Universitet' stop",
+                tips: "Visit in May-June for the best flower displays",
+                imageSeed: "botanical"
             }
         ];
 
@@ -524,7 +628,7 @@
             filtered.forEach((spot, index) => {
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl overflow-hidden shadow-lg card-hover cursor-pointer animate-fade-in';
-                card.style.animationDelay = `${index * 0.1}s`;
+                card.style.animationDelay = `${index * 0.05}s`;
                 card.onclick = () => openSpotDetail(spot.id);
                 
                 card.innerHTML = `
@@ -577,17 +681,14 @@
             const content = document.getElementById('modal-content');
             
             content.innerHTML = `
-                <div class="relative h-64 md:h-80 bg-gradient-to-br from-teal-500 to-teal-700">
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="text-center text-white p-8">
-                            <div class="bg-white/20 backdrop-blur w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i data-lucide="map-pin" class="w-10 h-10"></i>
-                            </div>
-                            <h2 class="text-3xl md:text-4xl font-bold mb-2">${spot.name}</h2>
-                            <p class="text-teal-100">${spot.type}</p>
-                        </div>
-                    </div>
-                    <button onclick="closeModal()" class="absolute top-4 right-4 bg-white/20 backdrop-blur p-2 rounded-full text-white hover:bg-white/30 transition">
+                <div class="relative h-64 md:h-80 bg-slate-200">
+                    <img 
+                        src="img/${spot.imageSeed}.jpg" 
+                        alt="${spot.name}"
+                        class="w-full h-full object-cover"
+                        onerror="this.style.display='none'; this.parentElement.classList.add('bg-gradient-to-br', 'from-teal-500', 'to-teal-700'); this.parentElement.innerHTML='<div class=\'absolute inset-0 flex items-center justify-center\'><div class=\'text-center text-white p-8\'><div class=\'bg-white/20 backdrop-blur w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4\'><i data-lucide=\'map-pin\' class=\'w-10 h-10\'></i></div><h2 class=\'text-3xl md:text-4xl font-bold mb-2\'>${spot.name}</h2><p class=\'text-teal-100\'>${spot.type}</p></div></div><button onclick=\'closeModal()\' class=\'absolute top-4 right-4 bg-white/20 backdrop-blur p-2 rounded-full text-white hover:bg-white/30 transition z-10\'><i data-lucide=\'x\' class=\'w-6 h-6\'></i></button>'"
+                    >
+                    <button onclick="closeModal()" class="absolute top-4 right-4 bg-white/20 backdrop-blur p-2 rounded-full text-white hover:bg-white/30 transition z-10">
                         <i data-lucide="x" class="w-6 h-6"></i>
                     </button>
                 </div>
