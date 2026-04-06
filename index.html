@@ -528,8 +528,14 @@
                 card.onclick = () => openSpotDetail(spot.id);
                 
                 card.innerHTML = `
-                    <div class="relative h-48 overflow-hidden image-placeholder">
-                        <div class="placeholder-text">${spot.type}</div>
+                    <div class="relative h-48 overflow-hidden bg-slate-100">
+                        <img 
+                            src="img/${spot.imageSeed}.jpg" 
+                            alt="${spot.name}"
+                            class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                            onerror="this.parentElement.innerHTML='<div class=\'image-placeholder\'><div class=\'placeholder-text\'>${spot.type}</div></div>'"
+                            loading="lazy"
+                        >
                     </div>
                     <div class="p-6">
                         <div class="flex items-center gap-2 mb-3">
@@ -706,6 +712,5 @@
             lucide.createIcons();
         };
     </script>
-<script src="https://deepsite.hf.co/deepsite-badge.js"></script>
 </body>
 </html>
