@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hot Tourists Spots 72 | Discover Tyumen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        .text-primary { color: #0f172a; }
+        .text-secondary { color: #475569; }
+        .text-accent { color: #0d9488; }
+        .bg-accent { background-color: #0d9488; }
+        .bg-accent:hover { background-color: #0f766e; }
+        .border-accent { border-color: #0d9488; }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .image-placeholder {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 0.875rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .image-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+        }
+        .image-placeholder .placeholder-text {
+            background: rgba(255,255,255,0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            z-index: 1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 0.75rem;
+            z-index: 1;
+        }
+        
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            overflow-y: auto;
+        }
+        .detail-modal.active {
+            display: flex;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .leaflet-popup-content-wrapper {
+            border-radius: 0.75rem;
+            padding: 0;
+        }
+        .leaflet-popup-content {
+            margin: 0;
+            padding: 16px;
+            width: 280px !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white/95 backdrop-blur-md border-b border-slate-200 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-2">
+                    <div class="bg-teal-600 text-white p-2 rounded-lg">
+                        <i data-lucide="map-pin" class="w-5 h-5"></i>
+                    </div>
+                    <span class="font-bold text-xl text-slate-900">Hot Spots <span class="text-teal-600">72</span></span>
+                </div>
+                
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#spots" class="text-slate-600 hover:text-teal-600 font-medium transition">Spots</a>
+                    <a href="#map-section" class="text-slate-600 hover:text-teal-600 font-medium transition">Map</a>
+                    <a href="#submit" class="text-slate-600 hover:text-teal-600 font-medium transition">Submit</a>
+                    <button onclick="scrollToSection('spots')" class="bg-teal-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-teal-700 transition flex items-center gap-2">
+                        <i data-lucide="compass" class="w-4 h-4"></i>
+                        Explore Now
+                    </button>
+                </div>
+                
+                <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-slate-600">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-200">
+            <div class="px-4 py-4 space-y-3">
+                <a href="#spots" class="block text-slate-600 font-medium py-2">Spots</a>
+                <a href="#map-section" class="block text-slate-600 font-medium py-2">Map</a>
+                <a href="#submit" class="block text-slate-600 font-medium py-2">Submit</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 px-4 bg-gradient-to-br from-slate-50 to-slate-100">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
+                Discover Tyumen's <span class="text-teal-600">Hidden Gems</span>
+            </h1>
+            <p class="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+                From the first Russian settlement in Siberia to modern urban sanctuaries. 
+                Explore 10 handpicked spots loved by locals.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="scrollToSection('spots')" class="bg-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-teal-700 transition flex items-center justify-center gap-2 text-lg shadow-lg shadow-teal-200">
+                    <i data-lucide="map" class="w-5 h-5"></i>
+                    View All Spots
+                </button>
+                <button onclick="scrollToSection('submit')" class="bg-white text-slate-700 border border-slate-300 px-8 py-4 rounded-xl font-semibold hover:bg-slate-50 transition flex items-center justify-center gap-2 text-lg">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                    Suggest a Spot
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="py-8 px-4 bg-white border-b border-slate-200 sticky top-16 z-30">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-wrap gap-3 justify-center">
+                <button id="tab-all" onclick="filterSpots('all')" class="px-5 py-2.5 rounded-full font-medium text-sm transition bg-teal-600 text-white shadow-md shadow-teal-200">
+                    All Spots
+                </button>
+                <button id="tab-park" onclick="filterSpots('park')" class="px-5 py-2.5 rounded-full font-medium text-sm transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    Parks & Nature
+                </button>
+                <button id="tab-museum" onclick="filterSpots('museum')" class="px-5 py-2.5 rounded-full font-medium text-sm transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    Museums & Culture
+                </button>
+                <button id="tab-food" onclick="filterSpots('food')" class="px-5 py-2.5 rounded-full font-medium text-sm transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    Food & Drink
+                </button>
+                <button id="tab-architecture" onclick="filterSpots('architecture')" class="px-5 py-2.5 rounded-full font-medium text-sm transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+                    Architecture
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Spots Grid -->
+    <section id="spots" class="py-16 px-4 bg-slate-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="spots-grid">
+                <!-- Spots will be rendered here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section -->
+    <section id="map-section" class="py-16 px-4 bg-white border-t border-slate-200">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-900 mb-3">Explore on Map</h2>
+                <p class="text-slate-500">Click on markers to see details and navigate</p>
+            </div>
+            <div class="bg-slate-100 p-4 rounded-2xl shadow-inner">
+                <div id="map"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Submit Form Section -->
+    <section id="submit" class="bg-white py-16 px-4 border-t border-slate-200">
+        <div class="max-w-2xl mx-auto">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-semibold text-slate-900 mb-3">Submit Your Spot</h2>
+                <p class="text-slate-500">Know a hidden gem in Tyumen? Share it with our community.</p>
+            </div>
+            
+            <form id="submit-form" class="bg-slate-50 rounded-2xl p-8 border border-slate-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Spot Name *</label>
+                        <input type="text" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="e.g., Tsvetnoy Boulevard">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Category</label>
+                        <select class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm">
+                            <option value="park">Park & Nature</option>
+                            <option value="museum">Museum & Culture</option>
+                            <option value="food">Food & Drink</option>
+                            <option value="architecture">Architecture</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Description *</label>
+                    <textarea rows="3" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="What makes this place special?"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Address *</label>
+                        <input type="text" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="Street address in Tyumen">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Your Name</label>
+                        <input type="text" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="Your name (optional)">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-teal-600 text-white font-medium py-3 rounded-lg hover:bg-teal-700 transition flex items-center justify-center gap-2 text-sm">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    Submit for Review
+                </button>
+                <p class="text-xs text-slate-400 mt-4 text-center">All submissions are reviewed by our team.</p>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-12 px-4">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="bg-teal-600 text-white p-2 rounded-lg">
+                        <i data-lucide="map-pin" class="w-5 h-5"></i>
+                    </div>
+                    <span class="font-bold text-xl">Hot Spots 72</span>
+                </div>
+                <p class="text-slate-400 text-sm">Discover the best of Tyumen, curated by locals for travelers.</p>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-4">Quick Links</h4>
+                <ul class="space-y-2 text-slate-400 text-sm">
+                    <li><a href="#spots" class="hover:text-teal-400 transition">All Spots</a></li>
+                    <li><a href="#map-section" class="hover:text-teal-400 transition">Interactive Map</a></li>
+                    <li><a href="#submit" class="hover:text-teal-400 transition">Submit Spot</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-semibold mb-4">About Tyumen</h4>
+                <p class="text-slate-400 text-sm">The first Russian settlement in Siberia, founded in 1586. A modern city preserving its historical charm.</p>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto mt-8 pt-8 border-t border-slate-800 text-center text-slate-500 text-sm">
+            <p>&copy; 2024 Hot Tourists Spots 72. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" class="detail-modal" onclick="closeModal(event)">
+        <div class="bg-white w-full max-w-4xl m-auto md:rounded-2xl shadow-2xl overflow-hidden max-h-screen overflow-y-auto" onclick="event.stopPropagation()">
+            <div id="modal-content" class="custom-scrollbar">
+                <!-- Modal content injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 10 Real Tyumen Spots
+        const spots = [
+            {
+                id: 1,
+                name: "Tsvetnoy Boulevard",
+                category: "park",
+                type: "Park & Nature",
+                shortDesc: "The green heart of Tyumen with vibrant flower beds and historic walkways.",
+                fullDesc: "Tsvetnoy Boulevard is the central pedestrian street of Tyumen, stretching through the historic city center. Lined with benches, flower beds, and historic buildings, it's the perfect place for an evening stroll. The boulevard features numerous cafes, street musicians, and seasonal decorations.",
+                address: "Tsvetnoy Blvd, Tyumen",
+                coordinates: [57.1531, 65.5345],
+                hours: "Open 24/7",
+                howToGet: "Walk from the city center or take bus 12, 15, 27 to 'Tsentr' stop",
+                tips: "Visit at sunset when the flower beds are illuminated",
+                imageSeed: "park"
+            },
+            {
+                id: 2,
+                name: "Kashiriny Brothers Park",
+                category: "park",
+                type: "Park & Nature",
+                shortDesc: "A vast park with the famous Tyumen embankment and River Walk.",
+                fullDesc: "One of the largest parks in Tyumen featuring the beautiful embankment along the Tura River. Includes sports facilities, playgrounds, observation decks, and the famous 'Bridge of Lovers'. The park hosts city celebrations and outdoor concerts.",
+                address: "Naberezhnaya St, Tyumen",
+                coordinates: [57.1492, 65.5234],
+                hours: "6:00 AM - 11:00 PM",
+                howToGet: "Bus 25, 34 to 'Naberezhnaya' or walk from city center (15 min)",
+                tips: "Rent a bike at the park entrance to explore the full 3km embankment",
+                imageSeed: "nature"
+            },
+            {
+                id: 3,
+                name: "Tyumen Regional Museum",
+                category: "museum",
+                type: "Museum & Culture",
+                shortDesc: "Learn about Siberian history from ancient times to modern oil capital.",
+                fullDesc: "Housed in a beautiful historic building from 1910, this museum showcases the rich history of the Tyumen region. Exhibits include indigenous culture, the development of the Trans-Siberian Railway, and Tyumen's transformation into Russia's oil capital.",
+                address: "Respubliki St 73, Tyumen",
+                coordinates: [57.1539, 65.5358],
+                hours: "Tue-Sun: 10:00 AM - 6:00 PM",
+                howToGet: "Bus 15, 22 to 'Muzey' stop",
+                tips: "Ask for the English audio guide at the entrance",
+                imageSeed: "museum"
+            },
+            {
+                id: 4,
+                name: "Kolokolnya (Bell Tower)",
+                category: "architecture",
+                type: "Architecture",
+                shortDesc: "The iconic symbol of Tyumen offering panoramic city views.",
+                fullDesc: "Standing at 55 meters, this historic bell tower is the tallest structure in old Tyumen. Built in the 19th century, it offers 360-degree views of the city from the observation deck. The red-brick tower is beautifully illuminated at night.",
+                address: "Semakova St 14, Tyumen",
+                coordinates: [57.1528, 65.5372],
+                hours: "Daily: 10:00 AM - 8:00 PM",
+                howToGet: "5-minute walk from Tsvetnoy Boulevard",
+                tips: "Climb to the top just before sunset for the best photos",
+                imageSeed: "architecture"
+            },
+            {
+                id: 5,
+                name: "Znamensky Cathedral",
+                category: "architecture",
+                type: "Architecture",
+                shortDesc: "Stunning 18th-century Siberian Baroque architecture with intricate icons.",
+                fullDesc: "One of the finest examples of Siberian Baroque architecture. The cathedral features elaborate frescoes, a gilded iconostasis, and underground chapels. It's an active place of worship and a masterpiece of religious art.",
+                address: "Luzanskaya St 9, Tyumen",
+                coordinates: [57.1498, 65.5412],
+                hours: "Daily: 7:00 AM - 7:00 PM",
+                howToGet: "Walk from city center or bus 10, 14 to 'Sobor'",
+                tips: "Dress modestly - cover shoulders and knees",
+                imageSeed: "vintage"
+            },
+            {
+                id: 6,
+                name: "Dzerzhinsky Square",
+                category: "architecture",
+                type: "Architecture",
+                shortDesc: "Historic square surrounded by merchant mansions and modern art.",
+                fullDesc: "The main square of Tyumen featuring the Regional Administration building, historic trading rows, and modern sculptures. Recently renovated with fountains and pedestrian zones. Hosts city festivals and New Year celebrations.",
+                address: "Dzerzhinskogo Square, Tyumen",
+                coordinates: [57.1562, 65.5341],
+                hours: "Open 24/7",
+                howToGet: "Central location, accessible by all city transport",
+                tips: "Check out the underground shopping gallery beneath the square",
+                imageSeed: "cityscape"
+            },
+            {
+                id: 7,
+                name: "SibPlant (Siberian Plant)",
+                category: "food",
+                type: "Food & Drink",
+                shortDesc: "Trendy food court in a converted industrial plant building.",
+                fullDesc: "A hipster paradise housed in a renovated Soviet-era factory. Features multiple food vendors serving everything from authentic Russian dumplings to Korean BBQ and craft burgers. The industrial interior with exposed brick and steel beams creates a unique atmosphere.",
+                address: "Sovetskaya St 47/1, Tyumen",
+                coordinates: [57.1456, 65.5289],
+                hours: "Daily: 11:00 AM - 11:00 PM",
+                howToGet: "Bus 8, 19, 35 to 'Sovetskaya' stop",
+                tips: "Try the local craft beer selection at the bar",
+                imageSeed: "food"
+            },
+            {
+                id: 8,
+                name: "Gilevskaya Roshcha",
+                category: "park",
+                type: "Park & Nature",
+                shortDesc: "Ancient pine forest with walking trails and winter ski slopes.",
+                fullDesc: "A protected natural area on the outskirts of Tyumen featuring century-old pine trees. Popular for jogging, Nordic walking, and cross-country skiing in winter. The forest has marked trails and outdoor exercise equipment.",
+                address: "Gileva St, Tyumen",
+                coordinates: [57.1167, 65.6123],
+                hours: "Open 24/7",
+                howToGet: "Bus 85, 92 to 'Gileva' terminal stop (30 min from center)",
+                tips: "Bring mosquito repellent in summer months",
+                imageSeed: "nature"
+            },
+            {
+                id: 9,
+                name: "Art-Gallery 'Prolog'",
+                category: "museum",
+                type: "Museum & Culture",
+                shortDesc: "Contemporary art space featuring Siberian and international artists.",
+                fullDesc: "A modern art gallery in a converted loft space showcasing contemporary painting, photography, and installations. Regularly hosts exhibitions, art lectures, and creative workshops. The gallery shop sells unique local art pieces.",
+                address: "Lenina St 43, Tyumen",
+                coordinates: [57.1512, 65.5301],
+                hours: "Wed-Sun: 12:00 PM - 8:00 PM",
+                howToGet: "Walk from Tsvetnoy Boulevard (10 min)",
+                tips: "Check their schedule for opening nights with free wine",
+                imageSeed: "art"
+            },
+            {
+                id: 10,
+                name: "Akvamarine Water Park",
+                category: "entertainment",
+                type: "Entertainment",
+                shortDesc: "Tropical paradise with pools, slides, and spa in Siberia's climate.",
+                fullDesc: "An indoor tropical water park maintaining 30°C year-round. Features wave pools, water slides, lazy river, and spa zones. Popular with families and those seeking tropical warmth during the harsh Siberian winter.",
+                address: "Shirotnaya St 171, Tyumen",
+                coordinates: [57.1378, 65.5891],
+                hours: "Daily: 10:00 AM - 10:00 PM",
+                howToGet: "Bus 42, 56 or taxi (20 min from center)",
+                tips: "Visit on weekdays to avoid crowds",
+                imageSeed: "water"
+            }
+        ];
+
+        let map;
+        let markers = [];
+        let currentFilter = 'all';
+
+        // Initialize Leaflet Map
+        function initMap() {
+            // Tyumen center coordinates
+            map = L.map('map').setView([57.1522, 65.5272], 13);
+            
+            // Add OpenStreetMap tiles (free, no API key needed)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Add markers for all spots
+            spots.forEach(spot => {
+                addMarker(spot);
+            });
+        }
+
+        function addMarker(spot) {
+            const marker = L.marker(spot.coordinates).addTo(map);
+            
+            // Create popup content
+            const popupContent = `
+                <div class="p-2">
+                    <h3 class="font-bold text-teal-600 mb-1">${spot.name}</h3>
+                    <p class="text-sm text-slate-600 mb-3">${spot.type}</p>
+                    <button onclick="openSpotDetail(${spot.id})" class="text-sm bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition w-full">View Details</button>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            markers.push({ marker, spotId: spot.id, category: spot.category });
+        }
+
+        // Filter functionality
+        function filterSpots(category) {
+            currentFilter = category;
+            
+            // Update button styles
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.classList.remove('bg-teal-600', 'text-white', 'shadow-md', 'shadow-teal-200');
+                btn.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            
+            const activeBtn = document.getElementById(`tab-${category}`);
+            activeBtn.classList.remove('bg-slate-100', 'text-slate-600');
+            activeBtn.classList.add('bg-teal-600', 'text-white', 'shadow-md', 'shadow-teal-200');
+            
+            renderSpots();
+            updateMapMarkers();
+        }
+
+        function renderSpots() {
+            const grid = document.getElementById('spots-grid');
+            grid.innerHTML = '';
+            
+            const filtered = currentFilter === 'all' 
+                ? spots 
+                : spots.filter(s => s.category === currentFilter);
+            
+            filtered.forEach((spot, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl overflow-hidden shadow-lg card-hover cursor-pointer animate-fade-in';
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.onclick = () => openSpotDetail(spot.id);
+                
+                card.innerHTML = `
+                    <div class="relative h-48 overflow-hidden image-placeholder">
+                        <div class="placeholder-text">${spot.type}</div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-teal-100 text-teal-700 text-xs font-semibold px-3 py-1 rounded-full">
+                                ${spot.type}
+                            </span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">${spot.name}</h3>
+                        <p class="text-slate-600 text-sm mb-4 line-clamp-2">${spot.shortDesc}</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-1 text-teal-600 text-sm font-medium">
+                                <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                <span>View Details</span>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-5 h-5 text-slate-400"></i>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            lucide.createIcons();
+        }
+
+        function updateMapMarkers() {
+            markers.forEach(({ marker, category }) => {
+                if (currentFilter === 'all' || category === currentFilter) {
+                    marker.addTo(map);
+                } else {
+                    marker.remove();
+                }
+            });
+        }
+
+        // Modal functionality
+        function openSpotDetail(id) {
+            const spot = spots.find(s => s.id === id);
+            const modal = document.getElementById('detail-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.innerHTML = `
+                <div class="relative h-64 md:h-80 bg-gradient-to-br from-teal-500 to-teal-700">
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center text-white p-8">
+                            <div class="bg-white/20 backdrop-blur w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i data-lucide="map-pin" class="w-10 h-10"></i>
+                            </div>
+                            <h2 class="text-3xl md:text-4xl font-bold mb-2">${spot.name}</h2>
+                            <p class="text-teal-100">${spot.type}</p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal()" class="absolute top-4 right-4 bg-white/20 backdrop-blur p-2 rounded-full text-white hover:bg-white/30 transition">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                
+                <div class="p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-teal-50 p-4 rounded-xl border border-teal-100">
+                            <div class="flex items-center gap-2 text-teal-700 mb-2">
+                                <i data-lucide="clock" class="w-5 h-5"></i>
+                                <span class="font-semibold text-sm">Working Hours</span>
+                            </div>
+                            <p class="text-slate-700 text-sm">${spot.hours}</p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <div class="flex items-center gap-2 text-blue-700 mb-2">
+                                <i data-lucide="navigation" class="w-5 h-5"></i>
+                                <span class="font-semibold text-sm">How to Get There</span>
+                            </div>
+                            <p class="text-slate-700 text-sm">${spot.howToGet}</p>
+                        </div>
+                        <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                            <div class="flex items-center gap-2 text-amber-700 mb-2">
+                                <i data-lucide="star" class="w-5 h-5"></i>
+                                <span class="font-semibold text-sm">Local Tip</span>
+                            </div>
+                            <p class="text-slate-700 text-sm">${spot.tips}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="prose max-w-none">
+                        <h3 class="text-xl font-bold text-slate-900 mb-3">About This Place</h3>
+                        <p class="text-slate-600 leading-relaxed mb-6">${spot.fullDesc}</p>
+                        
+                        <div class="bg-slate-50 p-6 rounded-xl border-l-4 border-teal-500">
+                            <h4 class="font-bold text-slate-900 mb-2">Location</h4>
+                            <div class="flex items-center gap-2 text-slate-600 mb-4">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-teal-600"></i>
+                                <span>${spot.address}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex gap-4">
+                        <button onclick="focusMap([${spot.coordinates}])" class="flex-1 bg-teal-600 text-white py-3 rounded-lg font-semibold hover:bg-teal-700 transition flex items-center justify-center gap-2">
+                            <i data-lucide="map" class="w-5 h-5"></i>
+                            Show on Map
+                        </button>
+                        <button onclick="closeModal()" class="flex-1 bg-slate-200 text-slate-700 py-3 rounded-lg font-semibold hover:bg-slate-300 transition">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            lucide.createIcons();
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(event) {
+            if (!event || event.target.id === 'detail-modal') {
+                document.getElementById('detail-modal').classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        function focusMap(coords) {
+            closeModal();
+            map.setView(coords, 16);
+            document.getElementById('map-section').scrollIntoView({ behavior: 'smooth' });
+            
+            // Open popup for the marker
+            const markerData = markers.find(m => 
+                m.marker.getLatLng().lat === coords[0] && 
+                m.marker.getLatLng().lng === coords[1]
+            );
+            if (markerData) {
+                markerData.marker.openPopup();
+            }
+        }
+
+        // Form submission
+        document.getElementById('submit-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-6 py-4 rounded-lg shadow-xl z-50 animate-fade-in flex items-center gap-3';
+            notification.innerHTML = `
+                <i data-lucide="check-circle" class="w-6 h-6"></i>
+                <div>
+                    <div class="font-bold">Thank you!</div>
+                    <div class="text-sm text-green-100">Your suggestion has been submitted for review.</div>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            lucide.createIcons();
+            
+            this.reset();
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                notification.style.transition = 'all 0.3s';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        });
+
+        // Utility functions
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            renderSpots();
+            initMap();
+            lucide.createIcons();
+        };
+    </script>
+<script src="https://deepsite.hf.co/deepsite-badge.js"></script>
+</body>
+</html>
