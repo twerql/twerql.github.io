@@ -6,10 +6,35 @@
     <title>Hot Tourists Spots 72 | Discover Tyumen</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .detail-popup {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+            opacity: 0; visibility: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000; width: 90%; max-width: 500px; max-height: 90vh;
+        }
+        .detail-popup.active { transform: translate(-50%, -50%) scale(1); opacity: 1; visibility: visible; }
+        
+        .detail-popup-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);
+            opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 999;
+        }
+        .detail-popup-overlay.active { opacity: 1; visibility: visible; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+        
+        .animate-fade-in { animation: fadeInUp 0.4s ease forwards; opacity: 0; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .image-placeholder { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f1f5f9, #e2e8f0); color: #64748b; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
@@ -26,7 +51,6 @@
                 
                 <div class="hidden md:flex items-center gap-8">
                     <a href="#spots" class="text-slate-600 hover:text-teal-600 font-medium transition">Spots</a>
-                    <a href="#map-section" class="text-slate-600 hover:text-teal-600 font-medium transition">Map</a>
                     <a href="#submit" class="text-slate-600 hover:text-teal-600 font-medium transition">Submit</a>
                     <button onclick="scrollToSection('spots')" class="bg-teal-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-teal-700 transition flex items-center gap-2">
                         <i data-lucide="compass" class="w-4 h-4"></i>
@@ -44,7 +68,6 @@
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-200">
             <div class="px-4 py-4 space-y-3">
                 <a href="#spots" class="block text-slate-600 font-medium py-2">Spots</a>
-                <a href="#map-section" class="block text-slate-600 font-medium py-2">Map</a>
                 <a href="#submit" class="block text-slate-600 font-medium py-2">Submit</a>
             </div>
         </div>
@@ -105,7 +128,6 @@
         </div>
     </section>
 
-
     <!-- Submit Form Section -->
     <section id="submit" class="bg-white py-16 px-4 border-t border-slate-200">
         <div class="max-w-2xl mx-auto">
@@ -118,11 +140,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Spot Name *</label>
-                        <input type="text" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="e.g., Tsvetnoy Boulevard">
+                        <input type="text" id="spot-name" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="e.g., Tsvetnoy Boulevard">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Category</label>
-                        <select class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm">
+                        <select id="spot-category" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm">
                             <option value="park">Park & Nature</option>
                             <option value="museum">Museum & Culture</option>
                             <option value="architecture">Architecture</option>
@@ -133,17 +155,17 @@
                 
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-1.5">Description *</label>
-                    <textarea rows="3" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="What makes this place special?"></textarea>
+                    <textarea id="spot-desc" rows="3" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="What makes this place special?"></textarea>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Address *</label>
-                        <input type="text" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="Street address in Tyumen">
+                        <input type="text" id="spot-address" required class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="Street address in Tyumen">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Your Name</label>
-                        <input type="text" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="Your name (optional)">
+                        <input type="text" id="spot-author" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 outline-none transition bg-white text-sm" placeholder="Your name (optional)">
                     </div>
                 </div>
 
@@ -172,7 +194,6 @@
                 <h4 class="font-semibold mb-4">Quick Links</h4>
                 <ul class="space-y-2 text-slate-400 text-sm">
                     <li><a href="#spots" class="hover:text-teal-400 transition">All Spots</a></li>
-                    <li><a href="#map-section" class="hover:text-teal-400 transition">Interactive Map</a></li>
                     <li><a href="#submit" class="hover:text-teal-400 transition">Submit Spot</a></li>
                 </ul>
             </div>
@@ -186,12 +207,11 @@
         </div>
     </footer>
 
-    <!-- Detail Modal -->
-    <div id="detail-modal" class="detail-modal" onclick="closeModal(event)">
-        <div class="bg-white w-full max-w-4xl m-auto md:rounded-2xl shadow-2xl overflow-hidden max-h-screen overflow-y-auto" onclick="event.stopPropagation()">
-            <div id="modal-content" class="custom-scrollbar">
-                <!-- Modal content injected here -->
-            </div>
+    <!-- Compact Detail Popup -->
+    <div id="detail-popup-overlay" class="detail-popup-overlay" onclick="closeDetailPopup()"></div>
+    <div id="detail-popup" class="detail-popup bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div id="popup-content" class="custom-scrollbar max-h-[85vh] overflow-y-auto">
+            <!-- Content injected via JS -->
         </div>
     </div>
 
@@ -204,9 +224,8 @@
                 category: "entertainment",
                 type: "Entertainment",
                 shortDesc: "Russia's largest indoor water park with over 70 attractions and slides.",
-                fullDesc: "LetoLeto is the largest indoor water park in Russia, featuring more than 70 water attractions and slides. This tropical paradise maintains a comfortable 30°C temperature year-round, making it perfect for escaping Siberian winters. The park includes wave pools, extreme slides, lazy rivers, children's zones, and spa areas. Built with cutting-edge technology by Polin Waterparks, it offers world-class entertainment for the whole family.",
+                fullDesc: "LetoLeto is the largest indoor water park in Russia, featuring more than 70 water attractions and slides. This tropical paradise maintains a comfortable 30°C temperature year-round, making it perfect for escaping Siberian winters.",
                 address: "Shcherbakova St, 87, Tyumen",
-                coordinates: [57.1378, 65.5891],
                 hours: "Daily: 10:00 AM - 9:30 PM",
                 howToGet: "Bus 42, 56 or taxi (20 min from city center)",
                 tips: "Visit on weekdays to avoid crowds. Bring swimwear and towels.",
@@ -218,9 +237,8 @@
                 category: "park",
                 type: "Parks & Nature",
                 shortDesc: "Modern park celebrating 30 years of Russia-Korea diplomatic relations.",
-                fullDesc: "Opened in September 2020 near Lake Alebashevo, this is the first Russia-Korea Friendship Park in the country. The park features wild trees, tiled pathways, stylized benches, decorative lanterns, lawns, and plants that bloom at different times. It was created to commemorate the 30th anniversary of diplomatic relations between Russia and South Korea. The park includes symbolic elements from both cultures and serves as a peaceful recreation area.",
+                fullDesc: "Opened in September 2020 near Lake Alebashevo, this is the first Russia-Korea Friendship Park in the country. The park features wild trees, tiled pathways, stylized benches, and decorative lanterns.",
                 address: "Near Lake Alebashevo, Tyumen",
-                coordinates: [57.1167, 65.6234],
                 hours: "Open 24/7",
                 howToGet: "Bus 85, 92 to Alebashevo area (25 min from center)",
                 tips: "Great for photography, especially during cherry blossom season",
@@ -232,9 +250,8 @@
                 category: "park",
                 type: "Parks & Nature",
                 shortDesc: "The main pedestrian entertainment zone in the heart of Tyumen.",
-                fullDesc: "Tsvetnoy Boulevard is Tyumen's central pedestrian street and one of the city's modern symbols. Opened in 2004, this 800-meter-long entertainment zone stretches between Lenin, Pervomayskaya, Ordzhonikidze, and Gertsena streets. The boulevard features an amusement park, the Tyumen Circus, numerous cafes, street musicians, flower beds, and seasonal decorations. It hosts concerts, folk festivals, and city celebrations throughout the year.",
+                fullDesc: "Tsvetnoy Boulevard is Tyumen's central pedestrian street and one of the city's modern symbols. Opened in 2004, this 800-meter-long entertainment zone features an amusement park, the Tyumen Circus, numerous cafes, and street musicians.",
                 address: "Tsvetnoy Blvd, Tyumen",
-                coordinates: [57.1531, 65.5345],
                 hours: "Open 24/7",
                 howToGet: "Central location, accessible by all city transport",
                 tips: "Visit at sunset when the flower beds are illuminated",
@@ -246,9 +263,8 @@
                 category: "entertainment",
                 type: "Entertainment",
                 shortDesc: "Modern circus building with original architecture, a city landmark since 2004.",
-                fullDesc: "The Tyumen State Circus, located at the northern corner of Tsvetnoy Boulevard, features distinctive modern architecture that has become a city landmark. Built in 2004, the circus hosts world-class performances including acrobatics, animal shows, and theatrical productions. The building is beautifully illuminated at night and serves as one of Tyumen's most recognizable structures. It's part of the Russian State Circus company.",
+                fullDesc: "The Tyumen State Circus, located at the northern corner of Tsvetnoy Boulevard, features distinctive modern architecture. Built in 2004, it hosts world-class performances including acrobatics, animal shows, and theatrical productions.",
                 address: "Pervomayskaya St, 15, Tyumen",
-                coordinates: [57.1539, 65.5352],
                 hours: "Box office: Mon-Sun 10:00 AM - 7:00 PM",
                 howToGet: "Located on Tsvetnoy Boulevard, walk from city center",
                 tips: "Book tickets in advance for weekend shows",
@@ -260,9 +276,8 @@
                 category: "park",
                 type: "Parks & Nature",
                 shortDesc: "77-hectare protected natural area with ski slopes and sports facilities.",
-                fullDesc: "Zatyumensky Ecopark is a specially protected natural area and natural monument of regional significance, covering 77 hectares. This large eco-park offers year-round activities including cross-country ski slopes in winter and running/cycling trails in summer. The park features outdoor exercise equipment, children's playgrounds, barbecue areas, and the scenic Tin Pond. Designed with ecological sustainability principles using natural materials, it serves as a green lung for the city.",
+                fullDesc: "Zatyumensky Ecopark is a specially protected natural area covering 77 hectares. It offers year-round activities including cross-country ski slopes in winter and running/cycling trails in summer, with outdoor exercise equipment and children's playgrounds.",
                 address: "Barnaulskaya St, Tyumen",
-                coordinates: [57.1789, 65.5123],
                 hours: "Open 24/7",
                 howToGet: "Bus 15, 27 to 'Zatyumensky' stop (15 min from center)",
                 tips: "Rent ski equipment in winter at the park entrance",
@@ -274,9 +289,8 @@
                 category: "architecture",
                 type: "Architecture",
                 shortDesc: "Iconic cable-stayed pedestrian bridge over the Tura River.",
-                fullDesc: "The Bridge of Lovers (Most Vlyublennykh) is Tyumen's most romantic landmark. Built in 1987, this cable-stayed pedestrian bridge spans the Tura River with distinctive white pylons and steel cables. It connects the historical center with the Zarechny district and offers stunning views of the river and city. The bridge is beautifully illuminated at night and features love locks and romantic inscriptions. It's a traditional spot for newlyweds and couples.",
+                fullDesc: "The Bridge of Lovers is Tyumen's most romantic landmark. Built in 1987, this cable-stayed pedestrian bridge spans the Tura River with distinctive white pylons and steel cables, offering stunning views of the river and city.",
                 address: "Tura River, connecting Historical Center and Zarechny District",
-                coordinates: [57.1456, 65.5289],
                 hours: "Open 24/7",
                 howToGet: "Walk from Tsvetnoy Boulevard (10 min)",
                 tips: "Visit at sunset for the best photos and romantic atmosphere",
@@ -288,9 +302,8 @@
                 category: "museum",
                 type: "Museums & Culture",
                 shortDesc: "Tyumen's largest museum with exhibitions on local history, art, and culture.",
-                fullDesc: "The I.Ya. Slovtsov Museum Complex traces its history back to 1879 and is one of the largest museums in the Tyumen region. The modern complex houses diverse exhibitions including local history, indigenous peoples of the North, archaeological finds, cultural artifacts, and the largest mammoth skeleton in Russia. The museum also features exhibitions dedicated to writer Pyotr Ershov, Rubens and his time, and the 'Cultural Layer' permanent exhibition showcasing Tyumen's rich heritage.",
+                fullDesc: "The I.Ya. Slovtsov Museum Complex traces its history back to 1879. The modern complex houses diverse exhibitions including local history, indigenous peoples of the North, archaeological finds, and the largest mammoth skeleton in Russia.",
                 address: "Respubliki St, 21, Tyumen",
-                coordinates: [57.1539, 65.5358],
                 hours: "Tue-Sun: 10:00 AM - 6:00 PM, Mon: Closed",
                 howToGet: "Bus 15, 22 to 'Muzey' stop",
                 tips: "Ask for the English audio guide at the entrance",
@@ -302,9 +315,8 @@
                 category: "architecture",
                 type: "Architecture",
                 shortDesc: "18th-century Siberian Baroque masterpiece and cathedral of the Sign.",
-                fullDesc: "Znamensky Cathedral is one of the finest examples of Siberian Baroque architecture from the Tobolsk temple school. The original wooden church dates back to the 18th century, with its current appearance achieved after restoration in the 1990s. The cathedral features elaborate frescoes, a gilded iconostasis, and underground chapels. It's an active place of worship and a masterpiece of religious art, considered the pride of Tyumen architecture.",
+                fullDesc: "Znamensky Cathedral is one of the finest examples of Siberian Baroque architecture. The cathedral features elaborate frescoes, a gilded iconostasis, and underground chapels. It's an active place of worship and architectural masterpiece.",
                 address: "Semakova St, 13, Tyumen",
-                coordinates: [57.1498, 65.5412],
                 hours: "Daily: 7:00 AM - 7:00 PM",
                 howToGet: "Walk from city center or bus 10, 14 to 'Sobor'",
                 tips: "Dress modestly - cover shoulders and knees",
@@ -316,9 +328,8 @@
                 category: "architecture",
                 type: "Architecture",
                 shortDesc: "One of Siberia's oldest monasteries founded in 1616 with Baroque architecture.",
-                fullDesc: "Holy Trinity Monastery (originally Spaso-Preobrazhensky until 1715) is one of the oldest architectural ensembles in Siberia, founded in 1616 on the high right bank of the Tura River. The monastery's centerpiece is the Trinity Cathedral, built between 1709-1715, showcasing Ukrainian Baroque elements. The complex includes the Peter and Paul Church (founded 1726), inspired by Kiev Pechersk Lavra. The monastery was destroyed during Soviet times and rebuilt in 2008.",
+                fullDesc: "Holy Trinity Monastery is one of the oldest architectural ensembles in Siberia, founded in 1616. The monastery's centerpiece is the Trinity Cathedral (1709-1715), showcasing Ukrainian Baroque elements.",
                 address: "Komsomolskaya St, Tyumen",
-                coordinates: [57.1567, 65.5423],
                 hours: "Daily: 7:00 AM - 8:00 PM",
                 howToGet: "Bus 12, 18 to 'Monastyr' stop",
                 tips: "Attend Sunday morning service for a spiritual experience",
@@ -330,9 +341,8 @@
                 category: "park",
                 type: "Parks & Nature",
                 shortDesc: "Scenic riverside walkway with sculptures, cafes, and panoramic views.",
-                fullDesc: "The Tura River Embankment is Tyumen's most popular tourist destination and a beautifully developed riverside promenade in the historical and cultural center. The embankment features superb sculptures, a magical walkway along the river, observation decks, fountains, cafes, and restaurants. It's a perfect place for walking, jogging, or simply enjoying views of the Tura River. The embankment is especially beautiful when illuminated at night and hosts various city events.",
+                fullDesc: "The Tura River Embankment is Tyumen's most popular tourist destination - a beautifully developed riverside promenade featuring sculptures, observation decks, fountains, cafes, and restaurants. Perfect for walking or enjoying river views.",
                 address: "Naberezhnaya St, Tyumen",
-                coordinates: [57.1492, 65.5234],
                 hours: "Open 24/7",
                 howToGet: "Central location, walk from Tsvetnoy Boulevard (5 min)",
                 tips: "Take a boat tour in summer for river views of the city",
@@ -344,9 +354,8 @@
                 category: "architecture",
                 type: "Architecture",
                 shortDesc: "Unique sculpture complex honoring cats that saved Hermitage from rats in 1944.",
-                fullDesc: "Siberian Cats Square (Skver Sibirskikh Koshek) got its name in 2008 and commemorates a heroic story from 1944. During the Leningrad blockade, Tyumen sent 238 Siberian cats to Saint Petersburg to protect the famous Hermitage Museum from rats. The unique sculpture complex features 12 playful bronze cats in various poses. This charming square in the city center has become a beloved landmark and photo spot for tourists and locals.",
+                fullDesc: "Siberian Cats Square commemorates a heroic story from 1944: during the Leningrad blockade, Tyumen sent 238 Siberian cats to Saint Petersburg to protect the Hermitage Museum from rats. Features 12 playful bronze cats.",
                 address: "Near Lenina St, Tyumen",
-                coordinates: [57.1523, 65.5312],
                 hours: "Open 24/7",
                 howToGet: "5-minute walk from Tsvetnoy Boulevard",
                 tips: "Great photo opportunity, especially with children",
@@ -358,9 +367,8 @@
                 category: "museum",
                 type: "Museums & Culture",
                 shortDesc: "The only preserved classical merchant estate in Tyumen from 1804.",
-                fullDesc: "The Kolokolnikov Estate is the only fully preserved classical merchant estate in Tyumen, built in 1804. Originally belonging to merchant Ivan Kolokolnikov, this unique building features elements of Baroque and neoclassicism. The museum showcases the life of 19th-century Russian merchants with period furniture, personal belongings, and exhibits about the estate's owners and notable visitors. The building's unique façade stands out against modern buildings in the historical center.",
+                fullDesc: "The Kolokolnikov Estate is the only fully preserved classical merchant estate in Tyumen, built in 1804. The museum showcases 19th-century merchant life with period furniture, personal belongings, and historical exhibits.",
                 address: "Lunacharskogo St, 10, Tyumen",
-                coordinates: [57.1512, 65.5301],
                 hours: "Wed-Sun: 11:00 AM - 6:00 PM",
                 howToGet: "Walk from Tsvetnoy Boulevard (10 min)",
                 tips: "Check their schedule for special exhibitions and events",
@@ -372,9 +380,8 @@
                 category: "museum",
                 type: "Museums & Culture",
                 shortDesc: "Neoclassical mansion of industrialist N.D. Masharov showcasing pre-revolutionary life.",
-                fullDesc: "Masharov House Museum is housed in a beautiful neoclassical mansion from the early 20th century that belonged to N.D. Masharov, an industrialist and founder of the iron foundry industry in Tyumen. The museum features a small but informative exhibition dedicated to pre-revolutionary Tyumen life, with period interiors, historical photographs, and artifacts. It's a fine example of wooden architecture and offers insight into the merchant class lifestyle before 1917.",
+                fullDesc: "Masharov House Museum is housed in a beautiful neoclassical mansion from the early 20th century. Features period interiors, historical photographs, and artifacts showcasing pre-revolutionary Tyumen life.",
                 address: "Lenina St, 24, Tyumen",
-                coordinates: [57.1578, 65.5270],
                 hours: "Tue-Sat: 10:00 AM - 5:00 PM",
                 howToGet: "Central location, 8-minute walk from Tsvetnoy Boulevard",
                 tips: "Interactive exhibits make history engaging for all ages",
@@ -386,9 +393,8 @@
                 category: "museum",
                 type: "Museums & Culture",
                 shortDesc: "Art museum founded in 1957 with Russian and Western European collections.",
-                fullDesc: "The Tyumen Regional Museum of Fine Arts was founded in 1957 and houses a versatile collection encompassing classical Russian and Western European art, as well as works by local painters from the 19th-20th centuries. The museum features paintings, graphics, sculptures, and decorative arts. Regular exhibitions showcase both historical masterpieces and contemporary works. The collection includes pieces from various art movements and provides a comprehensive view of art history.",
+                fullDesc: "Founded in 1957, this museum houses classical Russian and Western European art, plus works by local painters. Features paintings, graphics, sculptures, and decorative arts from various periods.",
                 address: "Ordzhonikidze St, 47, Tyumen",
-                coordinates: [57.1512, 65.5345],
                 hours: "Tue-Sun: 11:00 AM - 7:00 PM, Mon: Closed",
                 howToGet: "Bus 15, 27 to 'Khudozhestvenny Muzey'",
                 tips: "Free admission on the first Thursday of each month",
@@ -400,9 +406,8 @@
                 category: "park",
                 type: "Parks & Nature",
                 shortDesc: "Beautiful natural forest park with trails, playgrounds, and BBQ areas.",
-                fullDesc: "Gilevskaya Roshcha (Gilev Grove) is one of Tyumen's most prominent parks, providing tranquility and comfort year-round. This beautiful natural forest park features spacious woods, marked paths and cycle ways, BBQ pits, riverbanks, and children's play areas. It's perfect for walking among century-old trees in fresh air, jogging, or family picnics. The park maintains its natural forest character while offering modern recreational facilities and sports fields.",
+                fullDesc: "Gilevskaya Roshcha is one of Tyumen's most prominent parks, providing tranquility year-round. Features spacious woods, marked paths, cycle ways, BBQ pits, riverbanks, and children's play areas.",
                 address: "Gilevskaya Roshcha St, Tyumen",
-                coordinates: [57.1249, 65.6218],
                 hours: "Open 24/7",
                 howToGet: "Bus 85, 92 to 'Gileva' terminal (25 min from center)",
                 tips: "Bring mosquito repellent in summer; perfect for autumn walks",
@@ -414,9 +419,8 @@
                 category: "entertainment",
                 type: "Entertainment",
                 shortDesc: "Russia's largest drama theater founded in 1858 with grand performances.",
-                fullDesc: "Tyumen Drama Theater, founded in 1858, is the largest drama theater in Russia. The modern building showcases stunning architecture and hosts spectacular theatrical performances ranging from classical plays to contemporary productions. With a 158-year history, the theater is the most prominent cultural institution in Tyumen, offering a rich tapestry of performances. The theater features both traditional Russian classics and modern avant-garde productions.",
+                fullDesc: "Founded in 1858, Tyumen Drama Theater is the largest in Russia. The modern building hosts spectacular performances ranging from classical plays to contemporary productions with a 158-year history.",
                 address: "Respubliki St, Tyumen",
-                coordinates: [57.1534, 65.5367],
                 hours: "Box office: Mon-Sat 10:00 AM - 7:00 PM",
                 howToGet: "Central location, walk from Tsvetnoy Boulevard",
                 tips: "Book tickets online in advance for popular shows",
@@ -428,9 +432,8 @@
                 category: "museum",
                 type: "Museums & Culture",
                 shortDesc: "Ultra-modern multimedia exhibition complex covering Russian history.",
-                fullDesc: "Historical Park 'Russia - My History' is an ultra-modern multimedia exhibition complex covering over 6,900 m² across four floors. The park presents four major expositions: 'Rurikovichi', 'Romanovs', 'From Great Upheavals to Great Victory', and 'Modern History of Russia'. Using cutting-edge technology, interactive displays, 3D reconstructions, and multimedia presentations, the park brings Russian history to life in an engaging and educational way. It's a must-visit for history enthusiasts.",
+                fullDesc: "An ultra-modern multimedia complex covering 6,900 m² across four floors. Presents Russian history through cutting-edge technology, interactive displays, 3D reconstructions, and multimedia presentations.",
                 address: "Respubliki St, Tyumen",
-                coordinates: [57.1589, 65.5401],
                 hours: "Wed-Sun: 10:00 AM - 8:00 PM, Mon-Tue: Closed",
                 howToGet: "Bus 12, 15, 27 to 'Istorichesky Park'",
                 tips: "Allow 3-4 hours to explore all four floors thoroughly",
@@ -442,9 +445,8 @@
                 category: "architecture",
                 type: "Architecture",
                 shortDesc: "Main city square featuring administrative buildings and Lenin monument.",
-                fullDesc: "Central Square (Tsentralnaya Ploshchad) is Tyumen's main square featuring beautiful administrative buildings and one of the region's most imposing monuments - the Monument to V.I. Lenin, installed in 1979. The square serves as the venue for major city events, celebrations, and public gatherings. Surrounded by government buildings and modern architecture, it represents the administrative heart of Tyumen. The square is beautifully maintained and illuminated at night.",
+                fullDesc: "Central Square is Tyumen's main square featuring beautiful administrative buildings and the Monument to V.I. Lenin (1979). Serves as venue for major city events and public gatherings.",
                 address: "Central Square, Tyumen",
-                coordinates: [57.1562, 65.5341],
                 hours: "Open 24/7",
                 howToGet: "Central location, accessible by all city transport",
                 tips: "Visit during city festivals for special events and concerts",
@@ -456,9 +458,8 @@
                 category: "entertainment",
                 type: "Entertainment",
                 shortDesc: "Concert hall founded in 1958 hosting classical and contemporary performances.",
-                fullDesc: "Tyumen Philharmonic was founded on October 30, 1958, with its concert hall opening in 1967. The venue hosts the acclaimed Tyumen Philharmonic Orchestra, one of Siberia's youngest yet most prestigious ensembles. The philharmonic offers diverse performances including classical concerts, symphony orchestras, chamber music, jazz, and contemporary shows. The building features excellent acoustics and hosts both local and international artists throughout the season.",
+                fullDesc: "Founded in 1958, the Tyumen Philharmonic hosts the acclaimed Tyumen Philharmonic Orchestra. Offers diverse performances including classical concerts, symphony orchestras, chamber music, and jazz.",
                 address: "Respubliki St, Tyumen",
-                coordinates: [57.1545, 65.5378],
                 hours: "Box office: Mon-Fri 10:00 AM - 6:00 PM",
                 howToGet: "Walk from Tsvetnoy Boulevard (7 min)",
                 tips: "Check the schedule for special guest performances",
@@ -470,9 +471,8 @@
                 category: "architecture",
                 type: "Architecture",
                 shortDesc: "Historic Trans-Siberian Railway station built in 1885, gateway to Siberia.",
-                fullDesc: "Tyumen Railway Station, built in 1885 as part of the Yekaterinburg-Tyumen railway line, marks a pivotal moment in Siberian development. As an important stop along the Trans-Siberian Railway, the station played a crucial role in connecting European Russia with Siberia. The station complex features unique industrial architecture from the late 19th century, including preserved water towers. Today's modern station maintains its historical significance while offering comfortable facilities for travelers.",
+                fullDesc: "Built in 1885 as part of the Yekaterinburg-Tyumen railway line, this station played a crucial role in connecting European Russia with Siberia. Features unique industrial architecture from the late 19th century.",
                 address: "Privokzalnaya St, 22, Tyumen",
-                coordinates: [57.1423, 65.5156],
                 hours: "Open 24/7",
                 howToGet: "Central location, bus 5, 10, 15 to 'Vokzal'",
                 tips: "See the historic water towers - examples of industrial heritage",
@@ -484,9 +484,8 @@
                 category: "entertainment",
                 type: "Entertainment",
                 shortDesc: "Natural thermal springs with temperatures from 36°C to 48°C.",
-                fullDesc: "Tyumen is famous for its 21 thermal springs, making it a year-round wellness destination. These hyperthermal springs feature water temperatures ranging from 36°C to 48°C, rising from boreholes nearly 2,500 meters deep. Popular complexes include Sovetsky Spring, Avan, Sosnoviy Bor, and Thermal Park Feshenel. Each offers outdoor pools, saunas, spa treatments, and relaxation areas. The mineral-rich waters provide therapeutic benefits and a unique Siberian spa experience.",
+                fullDesc: "Tyumen is famous for its 21 thermal springs with water temperatures ranging from 36°C to 48°C. Popular complexes include Sovetsky Spring, Avan, and Sosnoviy Bor, offering outdoor pools, saunas, and spa treatments.",
                 address: "Various locations around Tyumen",
-                coordinates: [57.1123, 65.4987],
                 hours: "Most open daily: 9:00 AM - 10:00 PM",
                 howToGet: "Taxi or car recommended (15-30 min from city)",
                 tips: "Visit Sovetsky Spring for the hottest water (up to 48°C)",
@@ -498,9 +497,8 @@
                 category: "architecture",
                 type: "Architecture",
                 shortDesc: "Historic monastery founded in 1620, Tyumen's only active church during Soviet times.",
-                fullDesc: "Ilinsky Women's Monastery was founded in 1620 and holds special significance as Tyumen's only active church throughout much of the Soviet period. The monastery features the Church of Elijah the Prophet and the Cathedral of the Nativity of the Blessed Virgin, with the foundation stone laid in 1833. The complex showcases traditional Russian Orthodox architecture and remains an active spiritual center. It's a peaceful place of worship with beautiful frescoes and iconostasis.",
+                fullDesc: "Founded in 1620, Ilinsky Women's Monastery was Tyumen's only active church throughout much of the Soviet period. Features the Church of Elijah the Prophet and showcases traditional Russian Orthodox architecture.",
                 address: "Kirova St, Tyumen",
-                coordinates: [57.1489, 65.5267],
                 hours: "Daily: 7:00 AM - 7:00 PM",
                 howToGet: "Bus 8, 14 to 'Ilyinsky Monastyr'",
                 tips: "Attend evening vespers for a serene spiritual experience",
@@ -512,9 +510,8 @@
                 category: "museum",
                 type: "Museums & Culture",
                 shortDesc: "Local history museum in historic building with natural history exhibits.",
-                fullDesc: "The City Duma Museum (Gorodskaya Duma) is a local history museum housed in a historic building in central Tyumen. The museum features exhibits on Tyumen's history from its founding in 1586 to modern times, including archaeological finds, historical photographs, documents, and artifacts. The 'Window to Nature' exhibition showcases effigies of Siberian animals and natural history displays. The museum provides comprehensive insights into the region's cultural and natural heritage.",
+                fullDesc: "A local history museum housed in a historic building featuring exhibits on Tyumen's history from 1586 to modern times, including archaeological finds, historical photographs, and the 'Window to Nature' exhibition.",
                 address: "Lenina St, Tyumen",
-                coordinates: [57.1534, 65.5334],
                 hours: "Tue-Sun: 10:00 AM - 6:00 PM, Mon: Closed",
                 howToGet: "Central location, 5-minute walk from Tsvetnoy Boulevard",
                 tips: "English translations available for most exhibits",
@@ -526,9 +523,8 @@
                 category: "museum",
                 type: "Museums & Culture",
                 shortDesc: "Museum showcasing Tyumen's oil and gas industry heritage and geology.",
-                fullDesc: "The Museum of Geology, Oil and Gas highlights Tyumen's role as Russia's oil and gas capital. The museum features extensive exhibits on the geological formation of Western Siberia, the history of oil and gas exploration, and the development of the industry that transformed the region. Displays include rock samples, drilling equipment, interactive materials on mining processes, and the story of Tyumen's transformation into an energy powerhouse. Essential for understanding modern Tyumen.",
+                fullDesc: "Highlights Tyumen's role as Russia's oil and gas capital. Features exhibits on geological formation of Western Siberia, history of oil exploration, and the development of the energy industry.",
                 address: "Respubliki St, Tyumen",
-                coordinates: [57.1556, 65.5389],
                 hours: "Mon-Fri: 9:00 AM - 5:00 PM, Sat-Sun: Closed",
                 howToGet: "Bus 15, 22 to 'Geologichesky Muzey'",
                 tips: "Guided tours available in English with advance booking",
@@ -540,9 +536,8 @@
                 category: "park",
                 type: "Parks & Nature",
                 shortDesc: "University botanical garden with diverse plant collections and research facilities.",
-                fullDesc: "Tyumen State University Botanical Garden serves as both a research facility and educational resource for the region. The garden features diverse plant collections adapted to Siberian climate conditions, including rare and endangered species. It's part of the X-BIO Institute and supports biological research and education. The garden offers peaceful walking paths, educational exhibits about local flora, and serves as a green oasis in the city. It's particularly beautiful during spring blooms and autumn colors.",
+                fullDesc: "Serves as both research facility and educational resource. Features diverse plant collections adapted to Siberian climate, including rare and endangered species, with peaceful walking paths and educational exhibits.",
                 address: "Volodarskogo St, Tyumen",
-                coordinates: [57.1601, 65.5412],
                 hours: "Mon-Fri: 9:00 AM - 5:00 PM",
                 howToGet: "Bus 12, 18 to 'Universitet' stop",
                 tips: "Visit in May-June for the best flower displays",
@@ -550,48 +545,12 @@
             }
         ];
 
-        let map;
-        let markers = [];
         let currentFilter = 'all';
-
-        // Initialize Leaflet Map
-        function initMap() {
-            // Tyumen center coordinates
-            map = L.map('map').setView([57.1522, 65.5272], 13);
-            
-            // Add OpenStreetMap tiles (free, no API key needed)
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-            }).addTo(map);
-
-            // Add markers for all spots
-            spots.forEach(spot => {
-                addMarker(spot);
-            });
-        }
-
-        function addMarker(spot) {
-            const marker = L.marker(spot.coordinates).addTo(map);
-            
-            // Create popup content
-            const popupContent = `
-                <div class="p-2">
-                    <h3 class="font-bold text-teal-600 mb-1">${spot.name}</h3>
-                    <p class="text-sm text-slate-600 mb-3">${spot.type}</p>
-                    <button onclick="openSpotDetail(${spot.id})" class="text-sm bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 transition w-full">View Details</button>
-                </div>
-            `;
-            
-            marker.bindPopup(popupContent);
-            markers.push({ marker, spotId: spot.id, category: spot.category });
-        }
 
         // Filter functionality
         function filterSpots(category) {
             currentFilter = category;
             
-            // Update button styles
             document.querySelectorAll('[id^="tab-"]').forEach(btn => {
                 btn.classList.remove('bg-teal-600', 'text-white', 'shadow-md', 'shadow-teal-200');
                 btn.classList.add('bg-slate-100', 'text-slate-600');
@@ -602,7 +561,6 @@
             activeBtn.classList.add('bg-teal-600', 'text-white', 'shadow-md', 'shadow-teal-200');
             
             renderSpots();
-            updateMapMarkers();
         }
 
         function renderSpots() {
@@ -617,7 +575,10 @@
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl overflow-hidden shadow-lg card-hover cursor-pointer animate-fade-in';
                 card.style.animationDelay = `${index * 0.05}s`;
-                card.onclick = () => openSpotDetail(spot.id);
+                card.onclick = (e) => {
+                    e.stopPropagation();
+                    openDetailPopup(spot.id);
+                };
                 
                 card.innerHTML = `
                     <div class="relative h-48 overflow-hidden bg-slate-100">
@@ -639,8 +600,8 @@
                         <p class="text-slate-600 text-sm mb-4 line-clamp-2">${spot.shortDesc}</p>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-1 text-teal-600 text-sm font-medium">
-                                <i data-lucide="map-pin" class="w-4 h-4"></i>
-                                <span>View Details</span>
+                                <i data-lucide="info" class="w-4 h-4"></i>
+                                <span>More info</span>
                             </div>
                             <i data-lucide="arrow-right" class="w-5 h-5 text-slate-400"></i>
                         </div>
@@ -652,110 +613,118 @@
             lucide.createIcons();
         }
 
-        function updateMapMarkers() {
-            markers.forEach(({ marker, category }) => {
-                if (currentFilter === 'all' || category === currentFilter) {
-                    marker.addTo(map);
-                } else {
-                    marker.remove();
-                }
-            });
-        }
-
-        // Modal functionality
-        function openSpotDetail(id) {
+        // === COMPACT DETAIL POPUP FUNCTIONS ===
+        function openDetailPopup(id) {
             const spot = spots.find(s => s.id === id);
-            const modal = document.getElementById('detail-modal');
-            const content = document.getElementById('modal-content');
+            if (!spot) return;
+            
+            const popup = document.getElementById('detail-popup');
+            const overlay = document.getElementById('detail-popup-overlay');
+            const content = document.getElementById('popup-content');
             
             content.innerHTML = `
-                <div class="relative h-64 md:h-80 bg-slate-200">
-                    <img 
-                        src="img/${spot.imageSeed}.jpg" 
-                        alt="${spot.name}"
-                        class="w-full h-full object-cover"
-                        onerror="this.style.display='none'; this.parentElement.classList.add('bg-gradient-to-br', 'from-teal-500', 'to-teal-700'); this.parentElement.innerHTML='<div class=\'absolute inset-0 flex items-center justify-center\'><div class=\'text-center text-white p-8\'><div class=\'bg-white/20 backdrop-blur w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4\'><i data-lucide=\'map-pin\' class=\'w-10 h-10\'></i></div><h2 class=\'text-3xl md:text-4xl font-bold mb-2\'>${spot.name}</h2><p class=\'text-teal-100\'>${spot.type}</p></div></div><button onclick=\'closeModal()\' class=\'absolute top-4 right-4 bg-white/20 backdrop-blur p-2 rounded-full text-white hover:bg-white/30 transition z-10\'><i data-lucide=\'x\' class=\'w-6 h-6\'></i></button>'"
-                    >
-                    <button onclick="closeModal()" class="absolute top-4 right-4 bg-white/20 backdrop-blur p-2 rounded-full text-white hover:bg-white/30 transition z-10">
-                        <i data-lucide="x" class="w-6 h-6"></i>
+                <!-- Header with gradient background -->
+                <div class="relative h-40 bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
+                    <div class="text-center text-white p-4">
+                        <div class="bg-white/20 backdrop-blur w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="map-pin" class="w-8 h-8"></i>
+                        </div>
+                        <h2 class="text-2xl font-bold mb-1">${spot.name}</h2>
+                        <span class="inline-block bg-white/20 px-3 py-1 rounded-full text-sm">${spot.type}</span>
+                    </div>
+                    <button onclick="closeDetailPopup()" class="absolute top-3 right-3 bg-white/20 backdrop-blur p-2 rounded-full text-white hover:bg-white/30 transition">
+                        <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>
                 
-                <div class="p-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div class="bg-teal-50 p-4 rounded-xl border border-teal-100">
-                            <div class="flex items-center gap-2 text-teal-700 mb-2">
-                                <i data-lucide="clock" class="w-5 h-5"></i>
-                                <span class="font-semibold text-sm">Working Hours</span>
+                <!-- Content -->
+                <div class="p-5 space-y-4">
+                    <!-- Quick Info Cards -->
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                            <i data-lucide="clock" class="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <div class="font-semibold text-sm text-slate-700">Hours</div>
+                                <p class="text-slate-600 text-sm">${spot.hours}</p>
                             </div>
-                            <p class="text-slate-700 text-sm">${spot.hours}</p>
                         </div>
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                            <div class="flex items-center gap-2 text-blue-700 mb-2">
-                                <i data-lucide="navigation" class="w-5 h-5"></i>
-                                <span class="font-semibold text-sm">How to Get There</span>
-                            </div>
-                            <p class="text-slate-700 text-sm">${spot.howToGet}</p>
-                        </div>
-                        <div class="bg-amber-50 p-4 rounded-xl border border-amber-100">
-                            <div class="flex items-center gap-2 text-amber-700 mb-2">
-                                <i data-lucide="star" class="w-5 h-5"></i>
-                                <span class="font-semibold text-sm">Local Tip</span>
-                            </div>
-                            <p class="text-slate-700 text-sm">${spot.tips}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="prose max-w-none">
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">About This Place</h3>
-                        <p class="text-slate-600 leading-relaxed mb-6">${spot.fullDesc}</p>
                         
-                        <div class="bg-slate-50 p-6 rounded-xl border-l-4 border-teal-500">
-                            <h4 class="font-bold text-slate-900 mb-2">Location</h4>
-                            <div class="flex items-center gap-2 text-slate-600 mb-4">
-                                <i data-lucide="map-pin" class="w-4 h-4 text-teal-600"></i>
-                                <span>${spot.address}</span>
+                        <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                            <i data-lucide="navigation" class="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <div class="font-semibold text-sm text-slate-700">How to get there</div>
+                                <p class="text-slate-600 text-sm">${spot.howToGet}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                            <i data-lucide="lightbulb" class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <div class="font-semibold text-sm text-slate-700">Local tip</div>
+                                <p class="text-slate-600 text-sm">${spot.tips}</p>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="mt-8 flex gap-4">
-                        <button onclick="focusMap([${spot.coordinates}])" class="flex-1 bg-teal-600 text-white py-3 rounded-lg font-semibold hover:bg-teal-700 transition flex items-center justify-center gap-2">
-                            <i data-lucide="map" class="w-5 h-5"></i>
-                            Show on Map
+                    <!-- Description -->
+                    <div class="border-t border-slate-200 pt-4">
+                        <h4 class="font-semibold text-slate-900 mb-2">About</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">${spot.fullDesc}</p>
+                    </div>
+                    
+                    <!-- Address -->
+                    <div class="bg-teal-50 p-4 rounded-xl border border-teal-100">
+                        <div class="flex items-center gap-2 text-teal-700 mb-1">
+                            <i data-lucide="map-pin" class="w-4 h-4"></i>
+                            <span class="font-semibold text-sm">Address</span>
+                        </div>
+                        <p class="text-slate-700 text-sm">${spot.address}</p>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3 pt-2">
+                        <button onclick="copyAddress('${spot.address}')" class="flex-1 bg-teal-600 text-white py-2.5 rounded-lg font-medium hover:bg-teal-700 transition flex items-center justify-center gap-2 text-sm">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                            Copy Address
                         </button>
-                        <button onclick="closeModal()" class="flex-1 bg-slate-200 text-slate-700 py-3 rounded-lg font-semibold hover:bg-slate-300 transition">
+                        <button onclick="closeDetailPopup()" class="px-4 py-2.5 border border-slate-300 rounded-lg font-medium hover:bg-slate-50 transition text-sm">
                             Close
                         </button>
                     </div>
                 </div>
             `;
             
-            modal.classList.add('active');
-            lucide.createIcons();
+            // Show popup with animation
+            overlay.classList.add('active');
+            popup.classList.add('active');
             document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal(event) {
-            if (!event || event.target.id === 'detail-modal') {
-                document.getElementById('detail-modal').classList.remove('active');
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        function focusMap(coords) {
-            closeModal();
-            map.setView(coords, 16);
-            document.getElementById('map-section').scrollIntoView({ behavior: 'smooth' });
             
-            // Open popup for the marker
-            const markerData = markers.find(m => 
-                m.marker.getLatLng().lat === coords[0] && 
-                m.marker.getLatLng().lng === coords[1]
-            );
-            if (markerData) {
-                markerData.marker.openPopup();
-            }
+            lucide.createIcons();
+        }
+
+        function closeDetailPopup() {
+            const popup = document.getElementById('detail-popup');
+            const overlay = document.getElementById('detail-popup-overlay');
+            
+            popup.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function copyAddress(address) {
+            navigator.clipboard.writeText(address).then(() => {
+                const btn = event.currentTarget;
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>Copied!';
+                btn.classList.add('bg-green-600');
+                lucide.createIcons();
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('bg-green-600');
+                    lucide.createIcons();
+                }, 2000);
+            });
         }
 
         // Form submission
@@ -794,10 +763,16 @@
             menu.classList.toggle('hidden');
         }
 
+        // Close popup on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDetailPopup();
+            }
+        });
+
         // Initialize on load
         window.onload = function() {
             renderSpots();
-            initMap();
             lucide.createIcons();
         };
     </script>
